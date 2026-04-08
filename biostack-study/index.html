@@ -1604,6 +1604,35 @@ function selectAnswer(idx,selected,correct){
   if(area)area.insertAdjacentHTML('beforeend',`<div class="quiz-next-wrap"><button type="button" class="btn btn-primary" onclick="quizGoNext()">${quizNextLabel()}</button></div>`);
 }
 
+async function callOllamaDirect(mode, notes, topic) {
+  const OLLAMA_HOST = 'http://127.0.0.1:11434';
+  const OLLAMA_MODEL = 'llama3.1:8b';
+  const base = `You are a study flashcard generator.\nReturn ONLY a JSON array. No markdown. No backticks. No extra text.\nSchema: [{"q":"question","a":"answer"}]\n\n`;
+  let prompt;
+  if (mode === 'topic') {
+    prompt = base + `Create an appropriate number of flashcards for the topic below.\nChoose the number based on topic breadth and expected difficulty.\nDo not exceed 40 cards.\nTopic: ${topic}\n`;
+  } else {
+    prompt = base + `Create an appropriate number of flashcards from the notes below.\nChoose the number based on how many distinct facts/concepts/procedures are present.\nDo not exceed 40 cards.\nNotes:\n${notes}\n`;
+  }
+  const r = await fetch(`${OLLAMA_HOST}/api/chat`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({model: OLLAMA_MODEL, stream: false, messages: [{role: 'user', content: prompt}], options: {temperature: 0.2}})
+  });
+  if (!r.ok) throw new Error('Ollama error ' + r.status + '. Is Ollama running? Start it with: OLLAMA_ORIGINS=https://nshaff.github.io ollama serve');
+  const data = await r.json();
+  const text = data?.message?.content || '';
+  const cleaned = text.replace(/```json|```/g, '').trim();
+  let cards;
+  try { cards = JSON.parse(cleaned); } catch {
+    const match = cleaned.match(/\[[\s\S]*\]/);
+    if (!match) throw new Error('Failed to parse JSON array from model response.');
+    cards = JSON.parse(match[0]);
+  }
+  if (!Array.isArray(cards)) throw new Error('Model did not return an array.');
+  return cards.map(c => ({q: typeof c?.q === 'string' ? c.q.trim() : '', a: typeof c?.a === 'string' ? c.a.trim() : ''})).filter(c => c.q && c.a).slice(0, 50);
+}
+
 async function generateDeck(){
   if(!STATE.activeClass){alert('Select a class first.');return;}
   const title=document.getElementById('gen-deck-title').value.trim()||'New deck';
@@ -1613,47 +1642,38 @@ async function generateDeck(){
   const btn=document.getElementById('btn-gen-deck');
   loading.classList.add('show');btn.disabled=true;btn.textContent='Generating...';
   try{
-    const res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'deck',notes})});
-    const data=await res.json();
-    if(!res.ok)throw new Error(data?.error||'Generation failed');
-    const cards=data.cards||[];
+    const cards=await callOllamaDirect('deck', notes, null);
     STATE.classes[STATE.activeClass].decks[title]=cards;
     save();renderDeckList();populateSelects();syncDeckDetailDrawer();
     loading.classList.remove('show');btn.disabled=false;btn.textContent='Generate deck';
     showFeedback('gen-deck-feedback',`Created "${title}" with ${cards.length} cards!`,true);
     document.getElementById('gen-deck-notes').value='';document.getElementById('gen-deck-title').value='';
-  }catch(e){loading.classList.remove('show');btn.disabled=false;btn.textContent='Generate deck';showFeedback('gen-deck-feedback','Error generating deck. Try again.',false);}
+  }catch(e){loading.classList.remove('show');btn.disabled=false;btn.textContent='Generate deck';showFeedback('gen-deck-feedback','Error: '+e.message,false);}
 }
 
 async function generateAddToDeck(){
   if(!STATE.activeClass){alert('Select a class first.');return;}
-  const sel=document.getElementById('addto-deck-select');
-  const deckName=(sel&&sel.value||'').trim();
+  const deckName=(document.getElementById('addto-deck-sel')||{}).value||'';
   if(!deckName){showFeedback('addto-deck-feedback','Select a deck first.',false);return;}
-  const notes=document.getElementById('addto-deck-notes').value.trim();
+  const notes=(document.getElementById('addto-deck-notes')||{}).value.trim();
   if(!notes){showFeedback('addto-deck-feedback','Please paste some additional notes first.',false);return;}
+  const topicInput=document.getElementById('addto-topic-input');
+  const topic=topicInput?(topicInput.value||'').trim():'';
+  const mode=topic?'topic':'cards';
   const loading=document.getElementById('addto-deck-loading');
   const btn=document.getElementById('btn-addto-deck');
-  loading.classList.add('show');btn.disabled=true;btn.textContent='Adding...';
+  loading.classList.add('show');btn.disabled=true;btn.textContent='Generating...';
   try{
-    const res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'deck',notes})});
-    const data=await res.json();
-    if(!res.ok)throw new Error(data?.error||'Generation failed');
-    const cards=(data.cards||[]).filter(c=>c&&c.q&&c.a);
+    const cards=await callOllamaDirect(mode, notes, topic);
     const cls=STATE.classes[STATE.activeClass];
     ensureClassShape(cls);
-    cls.decks[deckName]=cls.decks[deckName]||[];
-    const before=cls.decks[deckName].length;
+    if(!cls.decks[deckName])cls.decks[deckName]=[];
     cls.decks[deckName].push(...cards);
-    save();
-    renderDeckList();populateSelects();syncDeckDetailDrawer();
+    save();renderDeckList();populateSelects();syncDeckDetailDrawer();
     loading.classList.remove('show');btn.disabled=false;btn.textContent='Add cards to deck';
-    showFeedback('addto-deck-feedback',`Added ${cards.length} card${cards.length!==1?'s':''} to "${deckName}" (${before} → ${cls.decks[deckName].length}).`,true);
+    showFeedback('addto-deck-feedback',`Added ${cards.length} cards to "${deckName}"!`,true);
     document.getElementById('addto-deck-notes').value='';
-  }catch(e){
-    loading.classList.remove('show');btn.disabled=false;btn.textContent='Add cards to deck';
-    showFeedback('addto-deck-feedback','Error generating cards. Try again.',false);
-  }
+  }catch(e){loading.classList.remove('show');btn.disabled=false;btn.textContent='Add cards to deck';showFeedback('addto-deck-feedback','Error: '+e.message,false);}
 }
 
 function showFeedback(id,msg,good){
