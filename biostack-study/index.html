@@ -1,0 +1,1682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>biostack study</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html{overflow-y:scroll;}
+:root{
+  --app-font-size:16px;
+  --app-font-scale:1;
+  --app-bg:#1a1a2e;
+  --app-panel:#16213e;
+  --app-text:#e8e6f0;
+  --app-accent:#7c6ff7;
+  --app-accent-rgb:124,111,247;
+  --app-accent-2:#a89ff7;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--app-bg);color:var(--app-text);min-height:100vh;font-size:var(--app-font-size);}
+
+/* Sidebar */
+.sidebar{position:fixed;top:0;left:-280px;width:280px;height:100vh;background:var(--app-panel);border-right:0.5px solid rgba(255,255,255,0.08);z-index:100;transition:left 0.25s ease;display:flex;flex-direction:column;}
+.sidebar.open{left:0;}
+.sidebar-header{padding:1.25rem 1rem;border-bottom:0.5px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:space-between;}
+.logo{font-size:18px;font-weight:600;letter-spacing:-0.3px;}
+.logo .bio{color:#fff;}
+.logo .stack{color:var(--app-accent);}
+.logo .study{color:#fff;font-weight:400;}
+.close-btn{background:none;border:none;cursor:pointer;font-size:18px;color:rgba(255,255,255,0.4);padding:4px;line-height:1;}
+.close-btn:hover{color:#fff;}
+.sidebar-section{padding:0.75rem 1rem 0.25rem;font-size:11px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.07em;}
+.class-item{display:flex;align-items:center;justify-content:space-between;padding:10px 1rem;cursor:pointer;border-radius:8px;margin:2px 8px;transition:background 0.12s;}
+.class-item:hover{background:rgba(255,255,255,0.06);}
+.class-item.active{background:rgba(var(--app-accent-rgb),0.2);}
+.class-item-name{font-size:14px;font-weight:500;color:#e8e6f0;}
+.class-item.active .class-item-name{color:var(--app-accent-2);}
+.class-item-meta{font-size:11px;color:rgba(255,255,255,0.3);margin-top:1px;}
+.class-delete{background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.2);font-size:13px;padding:2px 6px;border-radius:4px;opacity:0;transition:opacity 0.12s;}
+.class-item:hover .class-delete{opacity:1;}
+.class-delete:hover{color:#f07070;background:rgba(240,112,112,0.15);}
+.add-class-btn{margin:8px;padding:10px 1rem;border-radius:8px;border:1px dashed rgba(255,255,255,0.15);background:transparent;cursor:pointer;font-size:13px;color:rgba(255,255,255,0.4);font-family:inherit;text-align:left;transition:all 0.12s;}
+.add-class-btn:hover{border-color:var(--app-accent);color:var(--app-accent-2);background:rgba(var(--app-accent-rgb),0.1);}
+.sidebar-footer{margin-top:auto;padding:1rem;border-top:0.5px solid rgba(255,255,255,0.06);font-size:12px;color:rgba(255,255,255,0.25);}
+
+/* Overlay */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99;}
+.overlay.show{display:block;}
+
+/* Topbar */
+.topbar{display:flex;align-items:center;gap:12px;padding:0.875rem 1.25rem;background:var(--app-panel);border-bottom:0.5px solid rgba(255,255,255,0.08);position:sticky;top:0;z-index:10;}
+.hamburger{background:none;border:0.5px solid rgba(255,255,255,0.15);border-radius:8px;cursor:pointer;padding:7px 8px;display:flex;flex-direction:column;gap:4px;transition:background 0.12s;}
+.hamburger:hover{background:rgba(255,255,255,0.08);}
+.hamburger span{display:block;width:16px;height:1.5px;background:#e8e6f0;border-radius:2px;}
+.topbar-logo{font-size:calc(16px * var(--app-font-scale));font-weight:600;letter-spacing:-0.3px;cursor:pointer;user-select:none;transition:opacity 0.15s;}
+.topbar-logo:hover{opacity:0.88;}
+.topbar-logo .bio{color:#fff;}
+.topbar-logo .stack{color:var(--app-accent);}
+.topbar-logo .study{color:#fff;font-weight:400;}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.topbar-class-badge{background:rgba(var(--app-accent-rgb),0.25);color:var(--app-accent-2);border:0.5px solid rgba(var(--app-accent-rgb),0.4);border-radius:8px;padding:5px 12px;font-size:calc(13px * var(--app-font-scale));font-weight:500;}
+.icon-btn{background:none;border:0.5px solid rgba(255,255,255,0.15);border-radius:8px;cursor:pointer;padding:7px 10px;color:rgba(255,255,255,0.6);transition:background 0.12s,border-color 0.12s,color 0.12s;font-size:14px;line-height:1;}
+.icon-btn:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.25);color:#fff;}
+
+/* Content */
+.content{max-width:860px;margin:0 auto;padding:1.5rem 1rem;}
+
+/* Home */
+.home-inner{max-width:520px;margin:0 auto;text-align:center;}
+.home-hero{text-align:center;padding:1.5rem 1rem 0.5rem;}
+.home-hero .logo{font-size:clamp(28px,6vw,40px);font-weight:600;letter-spacing:-0.4px;display:inline-block;margin:0 auto;}
+.home-sub{font-size:14px;color:rgba(255,255,255,0.38);margin-top:14px;max-width:420px;margin-left:auto;margin-right:auto;line-height:1.5;}
+.home-class-grid{display:grid;grid-template-columns:1fr;gap:14px;margin:1.75rem 0 1.25rem;justify-items:center;}
+.home-class-card{display:block;width:100%;background:var(--app-panel);border:0.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:1.15rem 1.25rem;cursor:pointer;text-align:center;font-family:inherit;transition:background 0.15s,border-color 0.15s;color:inherit;}
+.home-class-card:hover{background:rgba(var(--app-accent-rgb),0.12);border-color:rgba(var(--app-accent-rgb),0.35);}
+.home-class-code{font-size:12px;color:var(--app-accent-2);font-weight:600;margin-bottom:6px;}
+.home-class-name{font-size:15px;font-weight:500;color:#e8e6f0;}
+.home-class-meta{font-size:12px;color:rgba(255,255,255,0.35);margin-top:6px;}
+.home-actions{text-align:center;margin-top:0.5rem;}
+
+/* Tabs */
+.tabs{display:flex;gap:8px;margin-bottom:1.5rem;flex-wrap:wrap;}
+.tab{padding:8px 18px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.12);background:transparent;cursor:pointer;font-size:calc(14px * var(--app-font-scale));color:rgba(255,255,255,0.5);font-family:inherit;transition:all 0.15s;}
+.tab:hover{background:rgba(255,255,255,0.06);color:#e8e6f0;}
+.tab.active{background:rgba(124,111,247,0.25);color:#a89ff7;border-color:rgba(124,111,247,0.4);font-weight:500;}
+.section{display:none;}.section.active{display:block;}
+
+/* Cards / panels */
+.panel{background:var(--app-panel);border:0.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:1.25rem;margin-bottom:1rem;}
+.panel-title{font-size:calc(15px * var(--app-font-scale));font-weight:500;color:#e8e6f0;margin-bottom:12px;}
+.deck-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:0.5px solid rgba(255,255,255,0.06);flex-wrap:wrap;gap:8px;}
+.deck-row:last-child{border-bottom:none;}
+.deck-name{font-size:calc(14px * var(--app-font-scale));font-weight:500;color:#e8e6f0;}
+.deck-meta{font-size:12px;color:rgba(255,255,255,0.35);margin-top:2px;}
+.deck-badge{font-size:11px;padding:3px 9px;border-radius:6px;background:rgba(var(--app-accent-rgb),0.2);color:var(--app-accent-2);border:0.5px solid rgba(var(--app-accent-rgb),0.3);font-weight:500;}
+
+/* Deck details (expandable under list) */
+.deck-detail-drawer{display:none;margin-top:1rem;padding-top:1rem;border-top:0.5px solid rgba(255,255,255,0.08);}
+.deck-detail-drawer-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;}
+.deck-detail-empty{font-size:14px;color:rgba(255,255,255,0.3);padding:0.75rem 0;}
+.deck-detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;}
+.deck-detail-title{font-size:15px;font-weight:500;color:#e8e6f0;line-height:1.3;}
+.deck-detail-sub{font-size:12px;color:rgba(255,255,255,0.35);margin-top:4px;}
+.deck-notes{margin:10px 0 14px;}
+.card-editor-list{display:flex;flex-direction:column;gap:10px;}
+.card-editor{border:0.5px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);border-radius:12px;padding:10px;}
+.card-editor-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;}
+.card-editor-idx{font-size:11px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.06em;}
+.card-editor textarea{min-height:56px;}
+.card-editor .qa{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media(max-width:700px){.card-editor .qa{grid-template-columns:1fr;}}
+.muted-hint{font-size:12px;color:rgba(255,255,255,0.28);margin-top:8px;}
+
+/* Buttons */
+.btn{padding:7px 14px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.15);background:transparent;cursor:pointer;font-size:calc(13px * var(--app-font-scale));color:#e8e6f0;font-family:inherit;transition:all 0.15s;}
+.btn:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.25);}
+.btn-primary{background:var(--app-accent);border-color:var(--app-accent);color:#fff;}
+.btn-primary:hover{filter:brightness(0.95);}
+.btn-sm{padding:5px 11px;font-size:12px;}
+.btn-danger{border-color:rgba(240,112,112,0.3);color:#f07070;}
+.btn-danger:hover{background:rgba(240,112,112,0.12);}
+
+/* Multi-deck picker */
+.mdp-meta{font-size:12px;color:rgba(255,255,255,0.35);margin:8px 0 10px;line-height:1.45;}
+.mdp-list{display:flex;flex-direction:column;gap:8px;max-height:240px;overflow:auto;border:0.5px solid rgba(255,255,255,0.10);border-radius:12px;padding:10px;background:rgba(255,255,255,0.03);}
+.mdp-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer;user-select:none;border:0.5px solid rgba(255,255,255,0.0);transition:background 0.12s,border-color 0.12s;}
+.mdp-item:hover{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.08);}
+.mdp-item input{width:16px;height:16px;}
+.mdp-name{font-size:13px;color:#e8e6f0;font-weight:500;}
+.mdp-sub{font-size:11px;color:rgba(255,255,255,0.35);margin-top:2px;}
+.mdp-item-text{display:flex;flex-direction:column;gap:2px;}
+.mdp-toprow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;flex-wrap:wrap;}
+.mdp-mini-actions{display:flex;gap:8px;flex-wrap:wrap;}
+
+/* Flashcard */
+.flashcard-container{perspective:1000px;margin:1.5rem 0;}
+.flashcard{width:100%;min-height:200px;cursor:pointer;position:relative;transform-style:preserve-3d;transition:transform 0.5s;border-radius:14px;}
+.flashcard.flipped{transform:rotateY(180deg);}
+.fc-face{position:absolute;width:100%;min-height:200px;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center;}
+.fc-front{background:#16213e;border:0.5px solid rgba(255,255,255,0.1);}
+.fc-back{transform:rotateY(180deg);background:rgba(124,111,247,0.15);border:0.5px solid rgba(124,111,247,0.35);}
+.card-hint{font-size:11px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:1rem;}
+.card-q{font-size:calc(18px * var(--app-font-scale));font-weight:500;color:#e8e6f0;line-height:1.5;}
+.card-a{font-size:calc(16px * var(--app-font-scale));color:#a89ff7;line-height:1.6;}
+.card-nav{display:flex;align-items:center;justify-content:center;gap:1rem;margin-top:1rem;}
+.pbar-wrap{height:3px;background:rgba(255,255,255,0.08);border-radius:2px;margin:0.5rem 0 1rem;}
+.pbar{height:3px;background:var(--app-accent);border-radius:2px;transition:width 0.3s;}
+
+/* Quiz */
+.quiz-opt{width:100%;text-align:left;padding:12px 16px;margin-bottom:8px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.1);background:transparent;cursor:pointer;font-size:calc(14px * var(--app-font-scale));color:#e8e6f0;font-family:inherit;transition:all 0.15s;}
+.quiz-opt:hover:not(:disabled){background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.2);}
+.quiz-opt.correct{background:rgba(100,180,100,0.15);border-color:rgba(100,200,100,0.5);color:#7dd87d;}
+.quiz-opt.incorrect{background:rgba(240,112,112,0.12);border-color:rgba(240,112,112,0.4);color:#f07070;}
+.quiz-q{font-size:calc(15px * var(--app-font-scale));font-weight:500;color:#e8e6f0;margin-bottom:1.25rem;line-height:1.5;}
+.quiz-fr-wrap{margin-top:0.5rem;}
+.quiz-fr-input{width:100%;max-width:520px;display:block;margin:8px 0 12px;padding:10px 12px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.12);background:rgba(0,0,0,0.22);color:#e8e6f0;font-family:inherit;font-size:calc(14px * var(--app-font-scale));resize:vertical;min-height:88px;box-sizing:border-box;}
+.quiz-fr-input:focus{outline:none;border-color:rgba(124,111,247,0.45);}
+.quiz-fr-check{margin-top:4px;}
+.quiz-fr-result{margin-top:12px;padding:12px;border-radius:8px;font-size:14px;font-weight:500;}
+.quiz-fr-ok{background:rgba(100,180,100,0.15);border:0.5px solid rgba(100,200,100,0.4);color:#7dd87d;}
+.quiz-fr-bad{background:rgba(240,112,112,0.12);border:0.5px solid rgba(240,112,112,0.35);color:#f07070;}
+.quiz-fr-ans{margin-top:8px;font-weight:400;color:rgba(255,255,255,0.88);white-space:pre-wrap;}
+.quiz-format-lbl{font-size:12px;color:rgba(255,255,255,0.35);display:block;margin-bottom:6px;}
+.score-wrap{text-align:center;padding:2rem;}
+.score-num{font-size:52px;font-weight:600;color:var(--app-accent);}
+.score-lbl{font-size:14px;color:rgba(255,255,255,0.4);margin-top:4px;}
+.quiz-next-wrap{margin-top:1.25rem;}
+
+/* Decks mini stats */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.stat-card{background:#16213e;border:0.5px solid rgba(255,255,255,0.08);border-radius:10px;padding:1rem;}
+.stat-lbl{font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:4px;}
+.stat-num{font-size:calc(26px * var(--app-font-scale));font-weight:500;color:#e8e6f0;}
+
+/* Stats dashboard */
+#class-content.stats-theme{background:var(--app-bg);margin:-1.5rem -1rem;padding:1.5rem 1rem 2rem;border-radius:0;min-height:calc(100vh - 56px);}
+#stats.section.active{display:block;}
+#class-content.stats-theme{--stats-card-bg:var(--app-panel);--stats-card-border:rgba(255,255,255,0.08);--stats-card-shadow:0 6px 16px rgba(0,0,0,0.10);}
+.stats-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px;}
+@media(max-width:700px){.stats-grid-3{grid-template-columns:1fr;}}
+.dash-stat-card{background:var(--stats-card-bg);border:1px solid var(--stats-card-border);border-radius:12px;padding:20px;box-shadow:var(--stats-card-shadow);}
+.dash-stat-lbl{font-size:12px;color:rgba(255,255,255,0.65);margin-bottom:8px;}
+.dash-stat-num{font-size:calc(32px * var(--app-font-scale));font-weight:600;color:#ffffff;line-height:1.1;}
+.dash-stat-sub{font-size:12px;color:rgba(255,255,255,0.45);margin-top:6px;}
+.stats-row-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+@media(max-width:700px){.stats-row-2{grid-template-columns:1fr;}}
+.stats-panel{background:var(--stats-card-bg);border:1px solid var(--stats-card-border);border-radius:12px;padding:20px;box-shadow:var(--stats-card-shadow);}
+.stats-panel-h{font-size:11px;font-weight:600;color:rgba(255,255,255,0.55);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:16px;}
+.chart-bars-wrap{overflow-x:auto;}
+.chart-bars{min-height:200px;}
+.donut-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.donut-ring{width:168px;height:168px;border-radius:50%;position:relative;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.donut-ring::after{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:92px;height:92px;border-radius:50%;background:var(--stats-card-bg);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.08);}
+.donut-legend{display:flex;flex-wrap:wrap;justify-content:center;gap:14px 20px;font-size:12px;color:#5c5a56;}
+.donut-legend span{display:inline-flex;align-items:center;gap:6px;}
+.donut-legend i{width:10px;height:10px;border-radius:2px;display:inline-block;}
+.legend-correct{background:#4caf7a;}
+.legend-incorrect{background:#e89454;}
+.legend-none{background:#d8d6d0;}
+#class-content.stats-theme .donut-legend{color:rgba(255,255,255,0.60);}
+.timeline-panel{margin-bottom:14px;}
+.chart-line{min-height:180px;width:100%;}
+.mastery-panel{margin-bottom:14px;}
+.mastery-row{padding:16px 0;border-bottom:1px solid #eee;}
+.mastery-row:last-child{border-bottom:none;}
+.mastery-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;}
+.mastery-name{font-size:15px;font-weight:500;color:rgba(255,255,255,0.92);}
+.mastery-pct{font-size:15px;font-weight:600;color:#c85a3c;}
+.mastery-track{height:8px;background:rgba(255,255,255,0.10);border-radius:4px;margin-top:10px;overflow:hidden;}
+.mastery-fill{height:100%;background:linear-gradient(90deg,var(--app-accent),var(--app-accent-2));border-radius:4px;transition:width 0.35s;}
+.mastery-sub{font-size:12px;color:rgba(255,255,255,0.45);margin-top:8px;}
+
+/* Forms */
+textarea,input[type=text]{width:100%;padding:9px 12px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#e8e6f0;font-size:calc(14px * var(--app-font-scale));font-family:inherit;outline:none;}
+textarea{resize:vertical;line-height:1.5;}
+textarea::placeholder,input::placeholder{color:rgba(255,255,255,0.25);}
+select{padding:8px 12px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.12);background:#16213e;color:#e8e6f0;font-size:calc(14px * var(--app-font-scale));font-family:inherit;}
+.blank-field{height:38px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);}
+.blank-field::after{content:'';display:block;height:100%;}
+.feedback{font-size:13px;margin-top:8px;padding:8px 12px;border-radius:8px;display:none;}
+.feedback.show{display:block;}
+.feedback.good{background:rgba(100,180,100,0.15);color:#7dd87d;border:0.5px solid rgba(100,200,100,0.3);}
+.feedback.bad{background:rgba(240,112,112,0.12);color:#f07070;border:0.5px solid rgba(240,112,112,0.3);}
+.loading-ind{display:none;font-size:13px;color:rgba(255,255,255,0.4);padding:8px 0;}
+.loading-ind.show{display:block;}
+
+/* Modal */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;align-items:center;justify-content:center;}
+.modal-bg.show{display:flex;}
+.modal{background:#16213e;border-radius:16px;padding:1.5rem;width:90%;max-width:400px;border:0.5px solid rgba(255,255,255,0.1);}
+.modal h3{font-size:15px;font-weight:500;color:#e8e6f0;margin-bottom:1rem;}
+.modal input{margin-bottom:8px;}
+.modal-btns{display:flex;gap:8px;margin-top:1rem;justify-content:flex-end;}
+
+/* Empty */
+.empty{text-align:center;padding:3rem 1rem;color:rgba(255,255,255,0.3);font-size:14px;}
+.empty-icon{font-size:32px;margin-bottom:1rem;}
+
+@media(max-width:600px){.two-col{grid-template-columns:1fr;}}
+
+/* Calendar */
+.calendar-wrap{display:flex;flex-direction:column;gap:1.25rem;}
+.calendar-months{display:flex;flex-direction:column;gap:1.25rem;}
+.cal-month-panel{background:#16213e;border:0.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:1rem 1rem 1.1rem;}
+.cal-month-title{font-size:14px;font-weight:600;color:#e8e6f0;margin-bottom:10px;}
+.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px;font-size:10px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.06em;text-align:center;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.cal-cell{aspect-ratio:1;min-height:32px;display:flex;align-items:center;justify-content:center;font-size:13px;color:rgba(255,255,255,0.45);border-radius:8px;border:0.5px solid transparent;cursor:pointer;user-select:none;transition:background 0.12s,border-color 0.12s,box-shadow 0.12s;}
+.cal-cell-inner{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;padding:3px 4px;min-height:0;}
+.cal-cell-inner.with-tag{align-items:stretch;justify-content:flex-start;padding-top:2px;}
+.cal-cell-today-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#cfc6ff;line-height:1.1;align-self:flex-start;margin-bottom:3px;}
+.cal-exam-tags{display:flex;flex-direction:column;gap:3px;align-items:flex-start;width:100%;max-height:52px;overflow-y:auto;margin-bottom:3px;scrollbar-width:thin;}
+.cal-exam-tags::-webkit-scrollbar{width:4px;}
+.cal-exam-tags::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:4px;}
+.cal-exam-tag{display:block;font-size:9px;font-weight:600;line-height:1.25;padding:3px 5px;border-radius:5px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;border:0.5px solid transparent;}
+.cal-cell-day-num{flex:1;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;min-height:0;}
+.cal-cell.cal-has-final .cal-cell-day-num{color:#f07070;font-weight:600;}
+.cal-cell.cal-has-final:hover .cal-cell-day-num{color:#ff8a8a;}
+.cal-cell.today.cal-has-final .cal-cell-day-num{color:#ff9a9a;}
+.cal-cell:hover{background:rgba(255,255,255,0.06);color:#e8e6f0;}
+.cal-cell.other{opacity:0.25;pointer-events:none;}
+.cal-cell.cal-mixed-neutral{background:rgba(90,95,130,0.2);color:#e8e6f0;}
+.cal-cell.today{border-width:2px !important;border-color:#cdc4ff !important;background:rgba(124,111,247,0.22) !important;box-shadow:0 0 0 3px rgba(124,111,247,0.45),0 4px 14px rgba(0,0,0,0.25),inset 0 0 16px rgba(124,111,247,0.18) !important;color:#e8e6f0;font-weight:500;z-index:1;position:relative;}
+.cal-cell.today .cal-cell-today-lbl{color:#fff;text-shadow:0 0 8px rgba(124,111,247,0.8);}
+.cal-cell.today:hover{background:rgba(124,111,247,0.3) !important;}
+.cal-cell.selected:not(.today){border-color:#7c6ff7;box-shadow:0 0 0 1px rgba(124,111,247,0.35);}
+.cal-cell.today.selected{box-shadow:0 0 0 3px rgba(205,196,255,0.75),0 4px 14px rgba(0,0,0,0.25),inset 0 0 16px rgba(124,111,247,0.2) !important;}
+.cal-day-events-list{display:flex;flex-direction:column;gap:8px;margin:12px 0 14px;}
+.cal-day-type-badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;display:inline-block;border:0.5px solid transparent;line-height:1.2;vertical-align:middle;}
+.cal-day-event-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);font-size:13px;}
+.cal-day-event-meta{color:rgba(255,255,255,0.85);}
+.cal-editor-panel{background:#16213e;border:0.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:1rem;}
+.cal-editor-title{font-size:14px;font-weight:500;color:#e8e6f0;margin-bottom:10px;}
+.cal-editor-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo"><span class="bio">bio</span><span class="stack">stack</span> <span class="study">study</span></div>
+    <button class="close-btn" onclick="closeSidebar()">✕</button>
+  </div>
+  <div class="sidebar-section">Classes</div>
+  <div id="class-list"></div>
+  <button class="add-class-btn" onclick="showAddClass()">+ Add class</button>
+  <div class="sidebar-footer">Each class has its own decks &amp; progress.</div>
+</div>
+
+<div class="modal-bg" id="add-class-modal">
+  <div class="modal">
+    <h3>Add a class</h3>
+    <input type="text" id="new-class-name" placeholder="Class name (e.g. BIO 302 Genetics)" />
+    <input type="text" id="new-class-code" placeholder="Short label (e.g. BIO 302)" />
+    <div class="modal-btns">
+      <button class="btn" onclick="hideAddClass()">Cancel</button>
+      <button class="btn btn-primary" onclick="addClass()">Add class</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="settings-modal">
+  <div class="modal">
+    <h3>Settings</h3>
+    <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:8px;">Font size</div>
+    <select id="settings-font-size" onchange="onSettingsChange()" style="margin-bottom:12px;">
+      <option value="sm">Small</option>
+      <option value="md">Standard</option>
+      <option value="lg">Large</option>
+    </select>
+
+    <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:8px;">Color scheme</div>
+    <select id="settings-color-scheme" onchange="onSettingsSchemeChange()" style="margin-bottom:12px;">
+      <option value="standard">Standard</option>
+      <option value="redblack">Red/black</option>
+      <option value="greenorange">Green/orange</option>
+      <option value="custom">Custom</option>
+    </select>
+
+    <div id="settings-custom-wrap" style="display:none;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+        <label style="font-size:12px;color:rgba(255,255,255,0.35);display:flex;flex-direction:column;gap:6px;">
+          Accent
+          <input id="settings-custom-accent" type="color" value="#7c6ff7" onchange="onSettingsChange()" />
+        </label>
+        <label style="font-size:12px;color:rgba(255,255,255,0.35);display:flex;flex-direction:column;gap:6px;">
+          Background
+          <input id="settings-custom-bg" type="color" value="#1a1a2e" onchange="onSettingsChange()" />
+        </label>
+        <label style="font-size:12px;color:rgba(255,255,255,0.35);display:flex;flex-direction:column;gap:6px;">
+          Panels
+          <input id="settings-custom-panel" type="color" value="#16213e" onchange="onSettingsChange()" />
+        </label>
+        <label style="font-size:12px;color:rgba(255,255,255,0.35);display:flex;flex-direction:column;gap:6px;">
+          Text
+          <input id="settings-custom-text" type="color" value="#e8e6f0" onchange="onSettingsChange()" />
+        </label>
+      </div>
+    </div>
+
+    <div class="modal-btns">
+      <button class="btn" onclick="hideSettings()">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="multi-deck-modal">
+  <div class="modal">
+    <h3 id="multi-deck-title">Study multiple decks</h3>
+    <div class="mdp-meta" id="multi-deck-meta">Choose decks to include.</div>
+    <div class="mdp-mini-actions" style="margin-bottom:10px;">
+      <button class="btn btn-sm" type="button" onclick="multiDeckSetAll(true)">Select all</button>
+      <button class="btn btn-sm" type="button" onclick="multiDeckSetAll(false)">Select none</button>
+    </div>
+    <div class="mdp-list" id="multi-deck-list"></div>
+    <div class="modal-btns">
+      <button class="btn" onclick="hideMultiDeckModal()">Cancel</button>
+      <button class="btn btn-primary" id="multi-deck-go" onclick="confirmMultiDeck()">Go</button>
+    </div>
+  </div>
+</div>
+
+<div class="topbar">
+  <button class="hamburger" id="hamburger-btn" onclick="toggleSidebar()">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="topbar-logo" onclick="goHome()" title="Home"><span class="bio">bio</span><span class="stack">stack</span> <span class="study">study</span></div>
+  <div class="topbar-right">
+    <div class="topbar-class-badge" id="topbar-class" style="display:none;"></div>
+    <button class="icon-btn" type="button" onclick="showSettings()" title="Settings" aria-label="Settings">⚙︎</button>
+  </div>
+</div>
+
+<div class="content">
+  <div id="home-view" class="home-view" style="display:none;">
+    <div class="home-inner">
+      <div class="home-hero">
+        <div class="logo"><span class="bio">bio</span><span class="stack">stack</span> <span class="study">study</span></div>
+        <p class="home-sub">Choose a class to open decks, flashcards, quizzes, and more.</p>
+      </div>
+      <div id="home-class-grid" class="home-class-grid"></div>
+      <div class="home-actions">
+        <button type="button" class="btn btn-primary" onclick="showAddClass()">+ Add class</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="class-content" style="display:none;">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('decks')">My decks</button>
+      <button class="tab" onclick="switchTab('flashcards')">Flashcards</button>
+      <button class="tab" onclick="switchTab('quiz')">Quiz</button>
+      <button class="tab" onclick="switchTab('stats')">Stats</button>
+      <button class="tab" onclick="switchTab('calendar')">Calendar</button>
+      <button class="tab" onclick="switchTab('generate')">Generate</button>
+    </div>
+
+    <!-- Decks -->
+    <div id="decks" class="section active">
+      <div class="panel">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div class="panel-title" id="decks-panel-title">Decks</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
+            <button class="btn btn-sm" type="button" onclick="openMultiDeckModal('study')">Study all</button>
+            <button class="btn btn-sm" type="button" onclick="openMultiDeckModal('quiz')">Quiz all</button>
+            <button class="btn btn-sm" type="button" onclick="switchTab('generate')">+ New deck</button>
+          </div>
+        </div>
+        <div id="deck-list"></div>
+        <div id="deck-detail-drawer" class="deck-detail-drawer">
+          <div class="deck-detail-drawer-head">
+            <div class="panel-title" style="margin:0;">Deck details</div>
+            <button type="button" class="btn btn-sm" onclick="closeDeckDetails()">Close</button>
+          </div>
+          <div id="deck-detail-body" class="deck-detail-empty"></div>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="stat-card"><div class="stat-lbl">Cards studied today</div><div class="stat-num" id="stat-studied">0</div></div>
+        <div class="stat-card"><div class="stat-lbl">Quiz accuracy</div><div class="stat-num" id="stat-accuracy">—</div></div>
+      </div>
+    </div>
+
+    <!-- Flashcards -->
+    <div id="flashcards" class="section">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+        <select id="deck-select-fc" onchange="loadFlashcards()"></select>
+        <span style="font-size:13px;color:rgba(255,255,255,0.35);" id="fc-progress">1 / 1</span>
+      </div>
+      <div class="pbar-wrap"><div class="pbar" id="fc-bar" style="width:0%"></div></div>
+      <div class="flashcard-container">
+        <div class="flashcard" id="flashcard" onclick="flipCard()">
+          <div class="fc-face fc-front">
+            <div class="card-hint">tap to reveal answer</div>
+            <div class="card-q" id="fc-question">Select a deck to begin</div>
+          </div>
+          <div class="fc-face fc-back">
+            <div class="card-hint">answer</div>
+            <div class="card-a" id="fc-answer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-nav">
+        <button class="btn" onclick="prevCard()">← Prev</button>
+        <button class="btn" onclick="shuffleCards()">Shuffle</button>
+        <button class="btn" onclick="nextCard()">Next →</button>
+      </div>
+      <div style="margin-top:1rem;text-align:center;">
+        <span style="font-size:12px;color:rgba(255,255,255,0.3);">Did you know it?</span>
+        <div style="display:flex;gap:8px;justify-content:center;margin-top:8px;flex-wrap:wrap;">
+          <button class="btn" onclick="markCard(true)" style="color:#7dd87d;border-color:rgba(100,200,100,0.35);">✓ Got it</button>
+          <button class="btn" onclick="markCard(false)" style="color:#f07070;border-color:rgba(240,112,112,0.35);">✗ Review</button>
+          <button class="btn btn-sm" id="btn-clear-weak" onclick="removeCurrentFromWeak()" style="display:none;color:#a89ff7;border-color:rgba(124,111,247,0.45);">Remove from weak</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quiz -->
+    <div id="quiz" class="section">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:0.75rem;">
+        <select id="deck-select-quiz"></select>
+        <button class="btn btn-primary" onclick="startQuiz()">Start quiz</button>
+      </div>
+      <div style="margin-bottom:1rem;">
+        <label class="quiz-format-lbl" for="quiz-format">Question type</label>
+        <select id="quiz-format">
+          <option value="mc">Multiple choice</option>
+          <option value="fr">Free response</option>
+          <option value="both">Both</option>
+        </select>
+      </div>
+      <div id="quiz-area"><div style="text-align:center;padding:2rem;color:rgba(255,255,255,0.3);font-size:14px;">Select a deck and press "Start quiz"</div></div>
+    </div>
+
+    <!-- Stats -->
+    <div id="stats" class="section">
+      <div class="stats-grid-3">
+        <div class="dash-stat-card">
+          <div class="dash-stat-lbl">Cards studied</div>
+          <div class="dash-stat-num" id="dash-sess-studied">0</div>
+          <div class="dash-stat-sub">this session</div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-stat-lbl">Overall accuracy</div>
+          <div class="dash-stat-num" id="dash-overall-acc">—</div>
+          <div class="dash-stat-sub">across all quizzes</div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-stat-lbl">Quizzes taken</div>
+          <div class="dash-stat-num" id="dash-quizzes">0</div>
+          <div class="dash-stat-sub">total</div>
+        </div>
+      </div>
+      <div class="stats-row-2">
+        <div class="stats-panel">
+          <div class="stats-panel-h">Quiz accuracy by deck</div>
+          <div class="chart-bars-wrap" id="chart-bars-container"></div>
+        </div>
+        <div class="stats-panel">
+          <div class="stats-panel-h">Correct vs incorrect</div>
+          <div class="donut-wrap" id="donut-container"></div>
+        </div>
+      </div>
+      <div class="stats-panel timeline-panel">
+        <div class="stats-panel-h">Cards studied — session timeline</div>
+        <div id="chart-line-container" class="chart-line"></div>
+      </div>
+      <div class="stats-panel mastery-panel">
+        <div class="stats-panel-h">Deck mastery</div>
+        <div id="mastery-list"></div>
+      </div>
+    </div>
+
+    <!-- Calendar (Apr–Jun) -->
+    <div id="calendar" class="section">
+      <div class="panel">
+        <div class="panel-title">Exam calendar</div>
+        <div class="calendar-wrap">
+          <div id="calendar-months" class="calendar-months"></div>
+          <div class="cal-editor-panel" id="calendar-editor" style="display:none;">
+            <div class="cal-editor-title" id="calendar-editor-label">Select a date</div>
+            <div id="calendar-day-events-list" class="cal-day-events-list"></div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:8px;">Add exam</div>
+            <div class="cal-editor-row" style="flex-wrap:wrap;">
+              <select id="calendar-class-select" style="flex:1;min-width:160px;"></select>
+              <select id="calendar-exam-type" style="min-width:120px;">
+                <option value="Midterm">Midterm</option>
+                <option value="Final">Final</option>
+              </select>
+              <button type="button" class="btn btn-primary btn-sm" onclick="addCalendarEvent()">Add</button>
+              <button type="button" class="btn btn-sm" onclick="clearCalendarPick()">Clear all on this day</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Generate -->
+    <div id="generate" class="section">
+      <div class="panel">
+        <div class="panel-title">Generate deck</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:1rem;">Paste notes, a copied chat, or any text — it builds a new deck.</div>
+        <input id="gen-deck-title" type="text" placeholder="Deck name (e.g. Meiosis vs Mitosis)" style="margin-bottom:8px;" />
+        <textarea id="gen-deck-notes" rows="6" placeholder="Paste your notes here..."></textarea>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:flex-start;margin-top:10px;">
+          <button class="btn btn-primary" id="btn-gen-deck" onclick="generateDeck()">Generate deck</button>
+          <span style="font-size:13px;color:rgba(255,255,255,0.3);">Auto card count (based on note length)</span>
+        </div>
+        <div class="loading-ind" id="gen-deck-loading">Generating deck...</div>
+        <div class="feedback" id="gen-deck-feedback"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Add to existing deck</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:1rem;">Paste new notes and it will generate additional cards and append them to a deck (nothing is deleted).</div>
+        <select id="addto-deck-select" style="margin-bottom:8px;"></select>
+        <textarea id="addto-deck-notes" rows="6" placeholder="Paste additional notes here..."></textarea>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:flex-start;margin-top:10px;">
+          <button class="btn btn-primary" id="btn-addto-deck" onclick="generateAddToDeck()">Add cards to deck</button>
+          <span style="font-size:13px;color:rgba(255,255,255,0.3);">Appends new cards</span>
+        </div>
+        <div class="loading-ind" id="addto-deck-loading">Generating cards...</div>
+        <div class="feedback" id="addto-deck-feedback"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let STATE={classes:{},activeClass:null,examCalendar:{}};
+let currentDeck=null,currentCardIndex=0,cardFlipped=false,quizState=null;
+let selectedDeckForEdit=null;
+let deckDetailsOpen=false;
+let calendarSelectedDate=null;
+const WEAK_VALUE='__weak_cards__';
+const MULTI_FC_VALUE='__multi_decks__';
+const MULTI_QUIZ_VALUE='__multi_decks_quiz__';
+let MULTI_PICKER={mode:'study',checked:{},deckNames:[]};
+let MULTI_CACHE={fcCards:[],fcLabel:'',quizCards:[],quizLabel:''};
+const CALENDAR_YEAR=2026;
+const CALENDAR_MONTHS=[3,4,5];
+
+const BIO302_DECKS={
+  "Cell Biology & Stem Cells":[
+    {q:"Where are most genes found?",a:"In the nucleus. Some genes are also in the mitochondria."},
+    {q:"What do most genes encode?",a:"Proteins — they tell a cell what to do and what proteins to express."},
+    {q:"How many chromosomes do humans have?",a:"46 chromosomes in 23 pairs."},
+    {q:"What is the Hayflick limit?",a:"Human cells divide ~50 times before stopping."},
+    {q:"What is a pluripotent stem cell?",a:"A stem cell that can become almost any cell type in the body."},
+    {q:"Where do embryonic stem cells come from?",a:"The inner cell mass of a blastocyst. They are pluripotent."},
+    {q:"What are iPS cells?",a:"Adult cells (e.g. skin) reprogrammed back to a pluripotent state."},
+    {q:"What happens during S phase?",a:"DNA replication — chromosomes are duplicated into sister chromatids."},
+    {q:"What is apoptosis?",a:"Programmed cell death — triggered when a cell fails a checkpoint."},
+    {q:"Difference between potency and specificity?",a:"Potency = range of cell types a stem cell can become. Specificity = how committed it is to one type."}
+  ],
+  "Meiosis and Reproduction":[
+    {q:"Two major outcomes of meiosis?",a:"1. Reduces chromosome number to haploid. 2. Produces genetic variation."},
+    {q:"What separates in Meiosis I vs II?",a:"Meiosis I: homologous chromosomes. Meiosis II: sister chromatids."},
+    {q:"Gametes from one primary spermatocyte vs oocyte?",a:"Spermatocyte → 4 sperm. Oocyte → 1 egg + polar bodies."},
+    {q:"What is crossing over?",a:"Exchange of genetic material between non-sister chromatids during Prophase I."},
+    {q:"What is independent assortment?",a:"Random orientation of homologs at Metaphase I — 2²³ (~8.4M) combinations possible."},
+    {q:"Stem cell in spermatogenesis?",a:"Spermatogonium — diploid, divides by mitosis."},
+    {q:"Why does female infertility increase with age?",a:"Egg quality and quantity decline; hormonal changes reduce ovulation reliability."},
+    {q:"What is IVF?",a:"Egg and sperm combined in a lab; embryo implanted into the uterus."},
+    {q:"What is PGD?",a:"A cell removed from a day-3 embryo and tested for genetic disorders before implantation."},
+    {q:"Stage of egg at ovulation?",a:"Secondary oocyte — completed Meiosis I. Meiosis II finishes only if fertilized."}
+  ],
+  "X-linked Genetics":[
+    {q:"What determines baby sex in humans?",a:"The father's sperm — X sperm → female (XX), Y sperm → male (XY)."},
+    {q:"What is a Barr body?",a:"An inactivated X chromosome. Number = X chromosomes − 1."},
+    {q:"Barr bodies in Triple X syndrome (XXX)?",a:"2 Barr bodies (3 − 1 = 2)."},
+    {q:"What gene controls X inactivation?",a:"XIST — its RNA coats and silences one X chromosome."},
+    {q:"Why are females mosaics for X-linked traits?",a:"X inactivation is random — maternal and paternal X active in different cells."},
+    {q:"5 components of sex determination?",a:"Chromosomal sex, gonadal sex, phenotypic sex, gender identity, sexual orientation."}
+  ]
+};
+
+function save(){try{localStorage.setItem('biostackState',JSON.stringify(STATE));}catch(e){}}
+function defaultSettings(){
+  return{
+    fontSize:'md',
+    colorScheme:'standard',
+    custom:{accent:'#7c6ff7',bg:'#1a1a2e',panel:'#16213e',text:'#e8e6f0'}
+  };
+}
+function ensureSettingsShape(){
+  if(!STATE.settings||typeof STATE.settings!=='object')STATE.settings=defaultSettings();
+  if(!STATE.settings.custom||typeof STATE.settings.custom!=='object')STATE.settings.custom=defaultSettings().custom;
+  if(!STATE.settings.fontSize)STATE.settings.fontSize='md';
+  if(!STATE.settings.colorScheme)STATE.settings.colorScheme='standard';
+}
+function load(){try{const s=localStorage.getItem('biostackState');if(s){STATE=JSON.parse(s);if(!STATE.classes)STATE.classes={};if(!STATE.examCalendar||typeof STATE.examCalendar!=='object')STATE.examCalendar={};Object.values(STATE.classes).forEach(ensureClassShape);migrateLegacyCalendar();}}catch(e){} ensureSettingsShape();applySettings();}
+function ensureClassShape(cls){
+  if(!cls.deckStats)cls.deckStats={};
+  if(cls.quizzesTaken==null)cls.quizzesTaken=0;
+  if(!cls.studyLog)cls.studyLog=[];
+  if(!cls.deckMeta)cls.deckMeta={};
+  if(!cls.weakCards)cls.weakCards=[];
+}
+function getExamCalendar(){if(!STATE.examCalendar||typeof STATE.examCalendar!=='object')STATE.examCalendar={};return STATE.examCalendar;}
+function migrateLegacyCalendar(){
+  let moved=false;
+  Object.keys(STATE.classes||{}).forEach(cid=>{
+    const cls=STATE.classes[cid];
+    if(!cls||!cls.calendarEvents||typeof cls.calendarEvents!=='object')return;
+    Object.keys(cls.calendarEvents).forEach(date=>{
+      const typ=cls.calendarEvents[date];
+      if(typ!=='Midterm'&&typ!=='Final')return;
+      const cal=getExamCalendar();
+      if(!cal[date])cal[date]=[];
+      cal[date].push({classId:cid,examType:typ});
+      moved=true;
+    });
+    delete cls.calendarEvents;
+  });
+  if(moved)save();
+}
+function pruneExamCalendarForClass(removedId){
+  const cal=getExamCalendar();
+  Object.keys(cal).forEach(date=>{
+    const arr=(cal[date]||[]).filter(e=>e.classId!==removedId);
+    if(arr.length)cal[date]=arr;else delete cal[date];
+  });
+}
+function classCalendarLabel(cid){
+  const c=STATE.classes[cid];
+  if(!c)return'Removed class';
+  return c.code?`${c.code} — ${c.name}`:c.name;
+}
+function eventsOnDate(dateKey){return getExamCalendar()[dateKey]||[];}
+const CAL_CLASS_HUES=[212,278,142,38,318,178,52,268,122,328,22,198];
+function sortedClassIds(){return Object.keys(STATE.classes||{}).slice().sort();}
+function classHueFor(cid){
+  const ids=sortedClassIds();
+  const idx=ids.indexOf(cid);
+  let slot=idx>=0?idx:([...String(cid)].reduce((a,c)=>a+c.charCodeAt(0),0)>>>0);
+  const h=CAL_CLASS_HUES[slot%CAL_CLASS_HUES.length];
+  return{h};
+}
+function examTagInlineStyle(cid,examType){
+  const {h}=classHueFor(cid);
+  const mid=examType==='Midterm';
+  if(mid)return`color:hsl(${h},28%,96%);background:hsla(${h},58%,54%,0.45);border-color:hsla(${h},52%,66%,0.45);`;
+  return`color:#ff8787;background:hsla(${h},62%,36%,0.55);border-color:hsla(${h},58%,27%,0.55);`;
+}
+function calendarCellDayAccent(list){
+  if(!list||!list.length)return{classExtra:'',cellStyle:''};
+  const uniq=[...new Set(list.map(e=>e.classId))];
+  const hasM=list.some(e=>e.examType==='Midterm');
+  const hasF=list.some(e=>e.examType==='Final');
+  if(uniq.length===1){
+    const {h}=classHueFor(uniq[0]);
+    if(hasM&&!hasF)return{classExtra:'',cellStyle:`background:hsla(${h},52%,46%,0.22);color:hsl(${h},32%,90%);`};
+    if(hasF&&!hasM)return{classExtra:'',cellStyle:`background:hsla(${h},58%,32%,0.3);color:hsl(${h},28%,88%);`};
+    return{classExtra:'',cellStyle:`background:linear-gradient(135deg,hsla(${h},54%,48%,0.2) 50%,hsla(${h},58%,32%,0.28) 50%);color:hsl(${h},26%,91%);`};
+  }
+  if(uniq.length===2){
+    const h0=classHueFor(uniq[0]).h;
+    const h1=classHueFor(uniq[1]).h;
+    const c0=`hsla(${h0},54%,44%,0.26)`;
+    const c1=`hsla(${h1},54%,38%,0.28)`;
+    return{classExtra:'',cellStyle:`background:linear-gradient(45deg,${c0} 50%,${c1} 50%);color:#e8e6f0;`};
+  }
+  return{classExtra:' cal-mixed-neutral',cellStyle:''};
+}
+function examCodeForCell(cid){
+  const c=STATE.classes[cid];
+  if(!c)return'?';
+  const raw=(c.code&&String(c.code).trim())||(c.name&&String(c.name).trim())||'?';
+  return raw.length>14?raw.slice(0,12)+'…':raw;
+}
+function examTagsHtmlForCell(list){
+  if(!list||!list.length)return'';
+  return list.map(e=>{
+    const code=examCodeForCell(e.classId);
+    const typ=e.examType==='Midterm'?'Midterm':e.examType==='Final'?'Final':String(e.examType);
+    const st=examTagInlineStyle(e.classId,e.examType);
+    return`<span class="cal-exam-tag" style="${st}" title="${escXml(code+' - '+typ)}">${escXml(code)} - ${escXml(typ)}</span>`;
+  }).join('');
+}
+
+function weakCardKey(deck,q,a){return (deck||'')+'\x00'+(q||'')+'\x00'+(a||'');}
+function addWeakCard(deckName,q,a){
+  if(!STATE.activeClass||!deckName||!q||!a)return;
+  const cls=STATE.classes[STATE.activeClass];
+  ensureClassShape(cls);
+  const k=weakCardKey(deckName,q,a);
+  if(cls.weakCards.some(w=>weakCardKey(w.deck,w.q,w.a)===k))return;
+  cls.weakCards.push({deck:deckName,q:String(q).trim(),a:String(a).trim()});
+  save();
+  populateSelects();
+}
+function getWeakCount(){return STATE.activeClass?(STATE.classes[STATE.activeClass].weakCards||[]).length:0;}
+
+function syncDeckDetailDrawer(){
+  const drawer=document.getElementById('deck-detail-drawer');
+  const body=document.getElementById('deck-detail-body');
+  if(!drawer||!body)return;
+  if(!deckDetailsOpen||!selectedDeckForEdit||!STATE.activeClass){
+    drawer.style.display='none';
+    body.innerHTML='';
+    return;
+  }
+  const decks=getDecks();
+  if(!decks[selectedDeckForEdit]){
+    deckDetailsOpen=false;
+    selectedDeckForEdit=null;
+    drawer.style.display='none';
+    body.innerHTML='';
+    return;
+  }
+  drawer.style.display='block';
+  renderDeckDetail();
+}
+function toggleDeckDetails(name){
+  if(!name)return;
+  if(deckDetailsOpen&&selectedDeckForEdit===name){
+    deckDetailsOpen=false;
+    selectedDeckForEdit=null;
+  }else{
+    deckDetailsOpen=true;
+    selectedDeckForEdit=name;
+  }
+  renderDeckList();
+  syncDeckDetailDrawer();
+}
+function closeDeckDetails(){
+  deckDetailsOpen=false;
+  selectedDeckForEdit=null;
+  renderDeckList();
+  syncDeckDetailDrawer();
+}
+
+function renderDeckDetail(){
+  const body=document.getElementById('deck-detail-body');
+  if(!STATE.activeClass){body.innerHTML='<div class="deck-detail-empty">Select a class first.</div>';return;}
+  const cls=STATE.classes[STATE.activeClass];
+  ensureClassShape(cls);
+  const decks=cls.decks||{};
+  const name=selectedDeckForEdit;
+  if(!name||!decks[name]){
+    body.innerHTML='<div class="deck-detail-empty">Select a deck to view and edit its cards.</div>';
+    return;
+  }
+  const cards=decks[name]||[];
+  cls.deckMeta[name]=cls.deckMeta[name]||{notes:''};
+  const notesVal=cls.deckMeta[name].notes||'';
+  body.innerHTML=`
+    <div class="deck-detail-head">
+      <div>
+        <div class="deck-detail-title">${escXml(name)}</div>
+        <div class="deck-detail-sub">${cards.length} card${cards.length!==1?'s':''} • edits save automatically</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
+        <button class="btn btn-sm" onclick="addCardToDeck()">+ Add card</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteDeck('${name.replace(/'/g,"\\'")}')">Delete deck</button>
+      </div>
+    </div>
+    <div class="deck-notes">
+      <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:6px;">Deck notes</div>
+      <textarea id="deck-notes-input" rows="3" placeholder="Add extra context, formulas, mnemonics...">${escXml(notesVal)}</textarea>
+      <div class="muted-hint">Tip: use this area for anything you want to remember outside the Q/A cards.</div>
+    </div>
+    <div class="card-editor-list">
+      ${cards.map((c,i)=>`
+        <div class="card-editor">
+          <div class="card-editor-top">
+            <div class="card-editor-idx">Card ${i+1}</div>
+            <button class="btn btn-sm btn-danger" onclick="deleteCardFromDeck(${i})">✕</button>
+          </div>
+          <div class="qa">
+            <div>
+              <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:6px;">Question</div>
+              <textarea rows="3" oninput="updateCardField(${i},'q',this.value)">${escXml(c.q||'')}</textarea>
+            </div>
+            <div>
+              <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:6px;">Answer</div>
+              <textarea rows="3" oninput="updateCardField(${i},'a',this.value)">${escXml(c.a||'')}</textarea>
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  const notesEl=document.getElementById('deck-notes-input');
+  if(notesEl){
+    notesEl.addEventListener('input',()=>{
+      const cls2=STATE.classes[STATE.activeClass];
+      ensureClassShape(cls2);
+      cls2.deckMeta[name]=cls2.deckMeta[name]||{notes:''};
+      cls2.deckMeta[name].notes=notesEl.value;
+      save();
+    });
+  }
+}
+
+function updateCardField(idx,field,val){
+  if(!STATE.activeClass||!selectedDeckForEdit)return;
+  const cls=STATE.classes[STATE.activeClass];
+  const deck=cls.decks[selectedDeckForEdit];
+  if(!deck||!deck[idx])return;
+  deck[idx][field]=val;
+  save();
+}
+
+function addCardToDeck(){
+  if(!STATE.activeClass||!selectedDeckForEdit)return;
+  const cls=STATE.classes[STATE.activeClass];
+  cls.decks[selectedDeckForEdit]=cls.decks[selectedDeckForEdit]||[];
+  cls.decks[selectedDeckForEdit].push({q:'',a:''});
+  save();
+  renderDeckList();
+  syncDeckDetailDrawer();
+}
+
+function deleteCardFromDeck(idx){
+  if(!STATE.activeClass||!selectedDeckForEdit)return;
+  const cls=STATE.classes[STATE.activeClass];
+  const deck=cls.decks[selectedDeckForEdit];
+  if(!deck||idx<0||idx>=deck.length)return;
+  deck.splice(idx,1);
+  save();
+  renderDeckList();
+  syncDeckDetailDrawer();
+}
+function getSessionStudied(){return STATE.activeClass?parseInt(sessionStorage.getItem('biostack_sess_'+STATE.activeClass)||'0',10):0;}
+function bumpSessionStudied(){if(!STATE.activeClass)return;const k='biostack_sess_'+STATE.activeClass;sessionStorage.setItem(k,String(parseInt(sessionStorage.getItem(k)||'0',10)+1));}
+function truncDeckLabel(s,max){if(s.length<=max)return s;return s.slice(0,Math.max(0,max-3))+'...';}
+function escXml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+function renderStats(){
+  if(!STATE.activeClass)return;
+  const cls=STATE.classes[STATE.activeClass];
+  ensureClassShape(cls);
+  document.getElementById('dash-sess-studied').textContent=String(getSessionStudied());
+  const qt=cls.qTotal||0,qc=cls.qCorrect||0;
+  document.getElementById('dash-overall-acc').textContent=qt?Math.round((qc/qt)*100)+'%':'—';
+  document.getElementById('dash-quizzes').textContent=String(cls.quizzesTaken||0);
+  const decks=getDecks();
+  const deckNames=Object.keys(decks);
+  const chartLine='rgba(255,255,255,0.10)';
+  const chartText='rgba(255,255,255,0.55)';
+  const barW=420,barH=160,pL=36,pR=12,pT=12,pB=28;
+  const innerW=barW-pL-pR,innerH=barH-pT-pB;
+  const gridYs=[0,20,40,60,80,100];
+  let barsSvg='<svg class="chart-bars" viewBox="0 0 '+barW+' '+barH+'" width="100%" preserveAspectRatio="xMidYMid meet">';
+  gridYs.forEach(pct=>{const y=pT+innerH*(1-pct/100);barsSvg+=`<line x1="${pL}" y1="${y}" x2="${barW-pR}" y2="${y}" stroke="${chartLine}" stroke-width="1"/>`;barsSvg+=`<text x="4" y="${y+4}" font-size="10" fill="${chartText}">${pct}%</text>`;});
+  const nBars=Math.max(deckNames.length,1);
+  const gap=8;
+  const bw=(innerW-gap*(nBars-1))/nBars;
+  deckNames.forEach((dn,idx)=>{
+    const ds=cls.deckStats[dn];
+    const pct=ds&&ds.t?Math.round((ds.c/ds.t)*100):0;
+    const h=innerH*(pct/100);
+    const x=pL+idx*(bw+gap);
+    const y=pT+innerH-h;
+    barsSvg+=`<rect x="${x}" y="${y}" width="${bw}" height="${h}" rx="4" fill="var(--app-accent)" opacity="${ds&&ds.t?1:0.25}"/>`;
+    const lab=truncDeckLabel(dn,14);
+    barsSvg+=`<text x="${x+bw/2}" y="${barH-8}" font-size="9" fill="${chartText}" text-anchor="middle">${escXml(lab)}</text>`;
+  });
+  if(!deckNames.length)barsSvg+=`<text x="${barW/2}" y="${barH/2}" font-size="12" fill="${chartText}" text-anchor="middle">No decks yet</text>`;
+  barsSvg+='</svg>';
+  document.getElementById('chart-bars-container').innerHTML=barsSvg;
+  const c=qc,i=Math.max(0,qt-qc);
+  let totalCardSlots=0;
+  deckNames.forEach(d=>{totalCardSlots+=(decks[d]&&decks[d].length)||0;});
+  let n=Math.max(0,totalCardSlots-qt);
+  const sum=c+i+n;
+  let cone='conic-gradient(#d8d6d0 0deg 360deg)';
+  if(sum>0){
+    let a=0;
+    const to=(x)=>360*x/sum;
+    const parts=[];
+    if(c>0){parts.push(`#4caf7a ${a}deg ${a+to(c)}deg`);a+=to(c);}
+    if(i>0){parts.push(`#e89454 ${a}deg ${a+to(i)}deg`);a+=to(i);}
+    if(n>0)parts.push(`#d8d6d0 ${a}deg ${a+to(n)}deg`);
+    cone='conic-gradient('+parts.join(',')+')';
+  }
+  document.getElementById('donut-container').innerHTML=`<div class="donut-ring" style="background:${cone};" aria-hidden="true"></div>
+    <div class="donut-legend"><span><i class="legend-correct"></i>Correct</span><span><i class="legend-incorrect"></i>Incorrect</span><span><i class="legend-none"></i>Not yet quizzed</span></div>`;
+  const lineW=520,lineH=200,lpL=48,lpR=16,lpT=16,lpB=36;
+  const liW=lineW-lpL-lpR,liH=lineH-lpT-lpB;
+  const hours=6;
+  const now=new Date();
+  const start=new Date(now);start.setMinutes(0,0,0);start.setHours(start.getHours()-(hours-1));
+  const counts=new Array(hours).fill(0);
+  const log=cls.studyLog||[];
+  log.forEach(ts=>{const t=new Date(ts);if(t>=start&&t<=now){const slot=Math.min(hours-1,Math.max(0,Math.floor((t-start)/3600000)));counts[slot]++;}});
+  const maxC=Math.max(1,...counts);
+  const pts=counts.map((cnt,idx)=>{const x=lpL+(idx/(hours-1))*liW;const y=lpT+liH-(cnt/maxC)*liH;return `${x},${y}`;}).join(' ');
+  let lineSvg=`<svg viewBox="0 0 ${lineW} ${lineH}" width="100%" height="200" preserveAspectRatio="xMidYMid meet">`;
+  lineSvg+=`<text x="8" y="${lpT+6}" font-size="10" fill="${chartText}">1</text><text x="8" y="${lpT+liH}" font-size="10" fill="${chartText}">0</text>`;
+  lineSvg+=`<polyline fill="none" stroke="var(--app-accent)" stroke-width="2.5" points="${pts}"/>`;
+  counts.forEach((cnt,idx)=>{const x=lpL+(idx/(hours-1))*liW;const y=lpT+liH-(cnt/maxC)*liH;lineSvg+=`<circle cx="${x}" cy="${y}" r="4" fill="var(--app-accent)"/>`;});
+  for(let idx=0;idx<hours;idx++){
+    const d=new Date(start.getTime()+idx*3600000);
+    let h=d.getHours();
+    const ampm=h>=12?'pm':'am';
+    h=h%12||12;
+    const x=lpL+(idx/(hours-1))*liW;
+    lineSvg+=`<text x="${x}" y="${lineH-10}" font-size="9" fill="${chartText}" text-anchor="middle">${h}:00${ampm}</text>`;
+  }
+  lineSvg+='</svg>';
+  document.getElementById('chart-line-container').innerHTML=lineSvg;
+  const ml=document.getElementById('mastery-list');
+  if(!deckNames.length){ml.innerHTML='<div class="mastery-sub" style="padding:12px 0;">No decks yet</div>';return;}
+  ml.innerHTML=deckNames.map(dn=>{
+    const ds=cls.deckStats[dn];
+    const has=ds&&ds.t>0;
+    const pct=has?Math.round((ds.c/ds.t)*100):0;
+    return`<div class="mastery-row">
+      <div class="mastery-top"><span class="mastery-name">${escXml(dn)}</span><span class="mastery-pct">${pct}%</span></div>
+      <div class="mastery-track"><div class="mastery-fill" style="width:${pct}%;"></div></div>
+      <div class="mastery-sub">${has?`${ds.c} correct of ${ds.t} in quizzes`:'No quizzes yet'}</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('overlay').classList.toggle('show');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show');}
+function showAddClass(){document.getElementById('add-class-modal').classList.add('show');document.getElementById('new-class-name').focus();}
+function hideAddClass(){document.getElementById('add-class-modal').classList.remove('show');document.getElementById('new-class-name').value='';document.getElementById('new-class-code').value='';}
+
+function showMultiDeckModal(){const m=document.getElementById('multi-deck-modal');if(m)m.classList.add('show');}
+function hideMultiDeckModal(){const m=document.getElementById('multi-deck-modal');if(m)m.classList.remove('show');}
+function openMultiDeckModal(mode){
+  if(!STATE.activeClass){alert('Select a class first.');return;}
+  const cls=STATE.classes[STATE.activeClass];
+  ensureClassShape(cls);
+  const decks=cls.decks||{};
+  const names=Object.keys(decks);
+  if(!names.length){alert('No decks yet. Create one first.');return;}
+  MULTI_PICKER={mode:mode==='quiz'?'quiz':'study',checked:{},deckNames:names.slice()};
+  names.forEach(n=>MULTI_PICKER.checked[n]=true);
+  const title=document.getElementById('multi-deck-title');
+  const meta=document.getElementById('multi-deck-meta');
+  const go=document.getElementById('multi-deck-go');
+  if(title)title.textContent=(MULTI_PICKER.mode==='quiz'?'Quiz multiple decks':'Study multiple decks');
+  if(meta)meta.textContent='Choose which decks to include (you can select all or just a few).';
+  if(go)go.textContent=(MULTI_PICKER.mode==='quiz'?'Start quiz':'Start studying');
+  renderMultiDeckList();
+  showMultiDeckModal();
+}
+function renderMultiDeckList(){
+  const el=document.getElementById('multi-deck-list');
+  if(!el)return;
+  const cls=STATE.classes[STATE.activeClass];
+  const decks=(cls&&cls.decks)||{};
+  el.innerHTML=MULTI_PICKER.deckNames.map(name=>{
+    const id='mdp_'+Math.abs([...name].reduce((a,c)=>((a*31)+c.charCodeAt(0))|0,7));
+    const checked=!!MULTI_PICKER.checked[name];
+    const count=(decks[name]&&decks[name].length)||0;
+    return `<label class="mdp-item" for="${id}">
+      <input id="${id}" type="checkbox" ${checked?'checked':''} onchange="multiDeckToggle('${name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}',this.checked)" />
+      <span class="mdp-item-text">
+        <span class="mdp-name">${escXml(name)}</span>
+        <span class="mdp-sub">${count} card${count!==1?'s':''}</span>
+      </span>
+    </label>`;
+  }).join('');
+}
+function multiDeckToggle(name,on){MULTI_PICKER.checked[name]=!!on;}
+function multiDeckSetAll(on){
+  MULTI_PICKER.deckNames.forEach(n=>MULTI_PICKER.checked[n]=!!on);
+  renderMultiDeckList();
+}
+function multiDeckSelectedNames(){
+  return MULTI_PICKER.deckNames.filter(n=>!!MULTI_PICKER.checked[n]);
+}
+function buildMergedCards(deckNames){
+  if(!STATE.activeClass)return[];
+  const cls=STATE.classes[STATE.activeClass];
+  ensureClassShape(cls);
+  const decks=cls.decks||{};
+  const out=[];
+  deckNames.forEach(dn=>{
+    const arr=decks[dn]||[];
+    arr.forEach(c=>{
+      if(!c||!c.q||!c.a)return;
+      out.push({q:c.q,a:c.a,deck:dn});
+    });
+  });
+  return out;
+}
+function ensureSelectOption(selectId,value,label){
+  const sel=document.getElementById(selectId);
+  if(!sel)return;
+  let opt=[...sel.options].find(o=>o.value===value);
+  if(!opt){
+    opt=document.createElement('option');
+    opt.value=value;
+    sel.insertBefore(opt,sel.firstChild);
+  }
+  opt.textContent=label;
+}
+function startMultiStudy(deckNames){
+  const cards=buildMergedCards(deckNames);
+  if(!cards.length){alert('No cards found in the selected decks.');return;}
+  const label=`Multiple decks (${deckNames.length})`;
+  MULTI_CACHE.fcCards=cards;
+  MULTI_CACHE.fcLabel=label;
+  ensureSelectOption('deck-select-fc',MULTI_FC_VALUE,label);
+  document.getElementById('deck-select-fc').value=MULTI_FC_VALUE;
+  loadFlashcards();
+  switchTab('flashcards');
+}
+function startMultiQuiz(deckNames){
+  const merged=buildMergedCards(deckNames).map(c=>({q:c.q,a:c.a}));
+  if(!merged.length){alert('No cards found in the selected decks.');return;}
+  const label=`Multiple decks (${deckNames.length})`;
+  MULTI_CACHE.quizCards=merged;
+  MULTI_CACHE.quizLabel=label;
+  ensureSelectOption('deck-select-quiz',MULTI_QUIZ_VALUE,label);
+  document.getElementById('deck-select-quiz').value=MULTI_QUIZ_VALUE;
+  switchTab('quiz');
+  startQuiz();
+}
+function confirmMultiDeck(){
+  const sel=multiDeckSelectedNames();
+  if(!sel.length){alert('Pick at least one deck.');return;}
+  hideMultiDeckModal();
+  if(MULTI_PICKER.mode==='quiz')startMultiQuiz(sel);
+  else startMultiStudy(sel);
+}
+
+function showSettings(){
+  ensureSettingsShape();
+  const m=document.getElementById('settings-modal');
+  if(!m)return;
+  document.getElementById('settings-font-size').value=STATE.settings.fontSize||'md';
+  document.getElementById('settings-color-scheme').value=STATE.settings.colorScheme||'standard';
+  document.getElementById('settings-custom-accent').value=(STATE.settings.custom&&STATE.settings.custom.accent)||'#7c6ff7';
+  document.getElementById('settings-custom-bg').value=(STATE.settings.custom&&STATE.settings.custom.bg)||'#1a1a2e';
+  document.getElementById('settings-custom-panel').value=(STATE.settings.custom&&STATE.settings.custom.panel)||'#16213e';
+  document.getElementById('settings-custom-text').value=(STATE.settings.custom&&STATE.settings.custom.text)||'#e8e6f0';
+  const cw=document.getElementById('settings-custom-wrap');
+  if(cw)cw.style.display=(STATE.settings.colorScheme==='custom')?'block':'none';
+  m.classList.add('show');
+}
+function hideSettings(){const m=document.getElementById('settings-modal');if(m)m.classList.remove('show');}
+function onSettingsSchemeChange(){
+  ensureSettingsShape();
+  const cs=document.getElementById('settings-color-scheme').value;
+  STATE.settings.colorScheme=cs;
+  const cw=document.getElementById('settings-custom-wrap');
+  if(cw)cw.style.display=(cs==='custom')?'block':'none';
+  onSettingsChange();
+}
+function onSettingsChange(){
+  ensureSettingsShape();
+  const fs=document.getElementById('settings-font-size').value;
+  const cs=document.getElementById('settings-color-scheme').value;
+  STATE.settings.fontSize=fs;
+  STATE.settings.colorScheme=cs;
+  if(cs==='custom'){
+    STATE.settings.custom={
+      accent:document.getElementById('settings-custom-accent').value,
+      bg:document.getElementById('settings-custom-bg').value,
+      panel:document.getElementById('settings-custom-panel').value,
+      text:document.getElementById('settings-custom-text').value
+    };
+  }
+  save();
+  applySettings();
+}
+function applySettings(){
+  ensureSettingsShape();
+  const fs=STATE.settings.fontSize;
+  const fsPx=fs==='sm'?'14px':fs==='lg'?'18px':'16px';
+  document.documentElement.style.setProperty('--app-font-size',fsPx);
+  const scale=fs==='sm'?0.92:fs==='lg'?1.1:1;
+  document.documentElement.style.setProperty('--app-font-scale',String(scale));
+  let cs=STATE.settings.colorScheme||'standard';
+  if(cs==='light')cs='standard';
+  let theme=null;
+  if(cs==='standard')theme={bg:'#1a1a2e',panel:'#16213e',text:'#e8e6f0',accent:'#7c6ff7',accent2:'#a89ff7'};
+  else if(cs==='redblack')theme={bg:'#0b0b0f',panel:'#121218',text:'#f3f4f6',accent:'#ef4444',accent2:'#f87171'};
+  else if(cs==='greenorange')theme={bg:'#0b1220',panel:'#0f1a2e',text:'#e9fff3',accent:'#22c55e',accent2:'#fb923c'};
+  else if(cs==='custom'){
+    const c=STATE.settings.custom||defaultSettings().custom;
+    theme={bg:c.bg,panel:c.panel,text:c.text,accent:c.accent,accent2:c.accent};
+  }else theme={bg:'#1a1a2e',panel:'#16213e',text:'#e8e6f0',accent:'#7c6ff7',accent2:'#a89ff7'};
+  const rgb=hexToRgb(theme.accent)||{r:124,g:111,b:247};
+  document.documentElement.style.setProperty('--app-bg',theme.bg);
+  document.documentElement.style.setProperty('--app-panel',theme.panel);
+  document.documentElement.style.setProperty('--app-text',theme.text);
+  document.documentElement.style.setProperty('--app-accent',theme.accent);
+  document.documentElement.style.setProperty('--app-accent-2',theme.accent2);
+  document.documentElement.style.setProperty('--app-accent-rgb',`${rgb.r},${rgb.g},${rgb.b}`);
+}
+
+function hexToRgb(hex){
+  const h=String(hex||'').trim();
+  const m=/^#?([0-9a-f]{6})$/i.exec(h);
+  if(!m)return null;
+  const n=parseInt(m[1],16);
+  return{r:(n>>16)&255,g:(n>>8)&255,b:n&255};
+}
+
+function addClass(){
+  const name=document.getElementById('new-class-name').value.trim();
+  const code=document.getElementById('new-class-code').value.trim()||name;
+  if(!name)return;
+  const id='class_'+Date.now();
+  STATE.classes[id]={name,code,decks:{},studied:0,qCorrect:0,qTotal:0,deckStats:{},quizzesTaken:0,studyLog:[],weakCards:[]};
+  save();hideAddClass();renderClassList();selectClass(id);closeSidebar();
+}
+
+function deleteClass(id){
+  if(!confirm(`Delete "${STATE.classes[id].name}" and all its decks?`))return;
+  pruneExamCalendarForClass(id);
+  delete STATE.classes[id];
+  if(STATE.activeClass===id){
+    STATE.activeClass=null;
+    const r=Object.keys(STATE.classes);
+    if(r.length)selectClass(r[0]);else showHome();
+  }
+  save();renderClassList();
+}
+
+function goHome(){
+  showHome();
+}
+
+function showHome(){
+  STATE.activeClass=null;
+  save();
+  const hb=document.getElementById('hamburger-btn');
+  if(hb)hb.style.display='none';
+  document.getElementById('home-view').style.display='block';
+  document.getElementById('class-content').style.display='none';
+  document.getElementById('topbar-class').style.display='none';
+  renderClassList();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function selectClass(id){
+  STATE.activeClass=id;save();renderClassList();
+  const hb=document.getElementById('hamburger-btn');
+  if(hb)hb.style.display='flex';
+  const badge=document.getElementById('topbar-class');
+  badge.textContent=STATE.classes[id].code;
+  badge.style.display='block';
+  document.getElementById('home-view').style.display='none';
+  document.getElementById('class-content').style.display='block';
+  document.getElementById('decks-panel-title').textContent=STATE.classes[id].code+' decks';
+  ensureClassShape(STATE.classes[id]);
+  selectedDeckForEdit=null;
+  deckDetailsOpen=false;
+  calendarSelectedDate=null;
+  const calEd=document.getElementById('calendar-editor');
+  if(calEd)calEd.style.display='none';
+  switchTab('decks');renderDeckList();populateSelects();syncDeckDetailDrawer();
+  const cls=STATE.classes[id];
+  document.getElementById('stat-studied').textContent=cls.studied||0;
+  document.getElementById('stat-accuracy').textContent=cls.qTotal?Math.round((cls.qCorrect/cls.qTotal)*100)+'%':'—';
+}
+
+function renderHomeClassGrid(){
+  const el=document.getElementById('home-class-grid');
+  if(!el)return;
+  const ids=Object.keys(STATE.classes);
+  if(!ids.length){
+    el.innerHTML='<div class="home-empty" style="text-align:center;padding:2.5rem 1rem;color:rgba(255,255,255,0.35);font-size:14px;grid-column:1/-1;">No classes yet. Use “Add class” below or the menu.</div>';
+    return;
+  }
+  el.innerHTML=ids.map(id=>{
+    const cls=STATE.classes[id];
+    const dc=Object.keys(cls.decks||{}).length;
+    const escId=String(id).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return`<button type="button" class="home-class-card" onclick="selectClass('${escId}')"><div class="home-class-code">${escXml(cls.code||'')}</div><div class="home-class-name">${escXml(cls.name||'')}</div><div class="home-class-meta">${dc} deck${dc!==1?'s':''}</div></button>`;
+  }).join('');
+}
+
+function renderClassList(){
+  const el=document.getElementById('class-list');
+  const ids=Object.keys(STATE.classes);
+  if(!ids.length){el.innerHTML='<div style="padding:8px 1rem;font-size:13px;color:rgba(255,255,255,0.25);">No classes yet</div>';renderHomeClassGrid();return;}
+  el.innerHTML=ids.map(id=>{
+    const cls=STATE.classes[id];
+    const active=STATE.activeClass===id;
+    const dc=Object.keys(cls.decks).length;
+    return `<div class="class-item${active?' active':''}" onclick="selectClass('${id}');closeSidebar();">
+      <div><div class="class-item-name">${cls.name}</div><div class="class-item-meta">${dc} deck${dc!==1?'s':''}</div></div>
+      <button class="class-delete" onclick="event.stopPropagation();deleteClass('${id}')">✕</button>
+    </div>`;
+  }).join('');
+  renderHomeClassGrid();
+}
+
+function getDecks(){return STATE.activeClass?STATE.classes[STATE.activeClass].decks:{};}
+
+function renderDeckList(){
+  const el=document.getElementById('deck-list');
+  const decks=getDecks();const names=Object.keys(decks);
+  if(!names.length){
+    el.innerHTML='<div style="font-size:14px;color:rgba(255,255,255,0.3);padding:1rem 0;">No decks yet — go to Generate to create one.</div>';
+    selectedDeckForEdit=null;
+    deckDetailsOpen=false;
+    syncDeckDetailDrawer();
+    return;
+  }
+  const code=STATE.activeClass?STATE.classes[STATE.activeClass].code:'';
+  el.innerHTML=names.map(n=>{
+    const esc=n.replace(/'/g,"\\'");
+    const activeDetails=deckDetailsOpen&&selectedDeckForEdit===n;
+    return`
+    <div class="deck-row">
+      <div>
+        <div class="deck-name"><span>${n}</span></div>
+        <div class="deck-meta">${decks[n].length} cards</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <span class="deck-badge">${code}</span>
+        <button class="btn btn-sm" onclick="studyDeck('${esc}')">Study</button>
+        <button class="btn btn-sm" onclick="quizDeck('${esc}')">Quiz</button>
+        <button class="btn btn-sm${activeDetails?' btn-primary':''}" onclick="toggleDeckDetails('${esc}')">Details</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteDeck('${esc}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function deleteDeck(name){
+  if(!confirm(`Delete "${name}"?`))return;
+  const cls=STATE.classes[STATE.activeClass];
+  ensureClassShape(cls);
+  delete cls.decks[name];
+  if(cls.deckStats&&cls.deckStats[name])delete cls.deckStats[name];
+  if(cls.deckMeta&&cls.deckMeta[name])delete cls.deckMeta[name];
+  if(selectedDeckForEdit===name){
+    selectedDeckForEdit=null;
+    deckDetailsOpen=false;
+  }
+  save();
+  renderDeckList();
+  populateSelects();
+  syncDeckDetailDrawer();
+  if(document.getElementById('stats').classList.contains('active'))renderStats();
+}
+
+function populateSelects(){
+  const names=Object.keys(getDecks());
+  const wk=getWeakCount();
+  const weakOpt=wk?`<option value="${WEAK_VALUE}">Weak cards (${wk})</option>`:'';
+  const multiOpt=MULTI_CACHE.fcCards&&MULTI_CACHE.fcCards.length?`<option value="${MULTI_FC_VALUE}">${escXml(MULTI_CACHE.fcLabel||'Multiple decks')}</option>`:'';
+  const deckOpts=names.length?names.map(n=>`<option value="${n}">${n}</option>`).join(''):'';
+  const inner=names.length||wk||multiOpt?`${multiOpt}${weakOpt}${deckOpts}`:'<option value="">No decks</option>';
+  document.getElementById('deck-select-fc').innerHTML=inner;
+  const multiQuizOpt=MULTI_CACHE.quizCards&&MULTI_CACHE.quizCards.length?`<option value="${MULTI_QUIZ_VALUE}">${escXml(MULTI_CACHE.quizLabel||'Multiple decks')}</option>`:'';
+  document.getElementById('deck-select-quiz').innerHTML=names.length||multiQuizOpt?`${multiQuizOpt}${names.map(n=>`<option value="${n}">${n}</option>`).join('')}`:'<option value="">No decks</option>';
+  if(names.length||wk||multiOpt)loadFlashcards();
+  populateAddToDeckSelect();
+}
+
+function populateAddToDeckSelect(){
+  const sel=document.getElementById('addto-deck-select');
+  if(!sel)return;
+  const names=Object.keys(getDecks());
+  if(!STATE.activeClass){
+    sel.innerHTML='<option value="">Select a class first</option>';
+    sel.disabled=true;
+    return;
+  }
+  if(!names.length){
+    sel.innerHTML='<option value="">No decks yet — create one above</option>';
+    sel.disabled=true;
+    return;
+  }
+  const prev=sel.value;
+  sel.disabled=false;
+  sel.innerHTML=names.map(n=>`<option value="${escXml(n)}">${escXml(n)}</option>`).join('');
+  if(prev && names.includes(prev)) sel.value=prev;
+}
+
+function studyDeck(n){document.getElementById('deck-select-fc').value=n;loadFlashcards();switchTab('flashcards');}
+function quizDeck(n){document.getElementById('deck-select-quiz').value=n;switchTab('quiz');startQuiz();}
+
+const TAB_ORDER=['decks','flashcards','quiz','stats','calendar','generate'];
+function switchTab(name){
+  TAB_ORDER.forEach((t,i)=>{
+    document.querySelectorAll('.tab')[i].classList.toggle('active',t===name);
+    document.getElementById(t).classList.toggle('active',t===name);
+  });
+  document.getElementById('class-content').classList.toggle('stats-theme',name==='stats');
+  if(name==='stats')renderStats();
+  if(name==='calendar')renderCalendar();
+}
+
+function loadFlashcards(){
+  const n=document.getElementById('deck-select-fc').value;
+  const decks=getDecks();
+  if(n===WEAK_VALUE&&STATE.activeClass){
+    const w=STATE.classes[STATE.activeClass].weakCards||[];
+    currentDeck=w.map(x=>({q:x.q,a:x.a,deck:x.deck}));
+  }else if(n===MULTI_FC_VALUE){
+    currentDeck=(MULTI_CACHE.fcCards||[]).map(c=>({q:c.q,a:c.a,deck:c.deck}));
+  }else{
+    currentDeck=decks[n]?[...decks[n]].map(c=>({q:c.q,a:c.a,deck:n})):[];
+  }
+  currentCardIndex=0;cardFlipped=false;
+  document.getElementById('flashcard').classList.remove('flipped');
+  const bw=document.getElementById('btn-clear-weak');
+  if(bw)bw.style.display=n===WEAK_VALUE&&currentDeck.length?'inline-block':'none';
+  updateFlashcard();
+}
+
+function updateFlashcard(){
+  const sel=document.getElementById('deck-select-fc').value;
+  const bw=document.getElementById('btn-clear-weak');
+  if(bw)bw.style.display=sel===WEAK_VALUE&&currentDeck&&currentDeck.length?'inline-block':'none';
+  if(!currentDeck||!currentDeck.length){document.getElementById('fc-question').textContent=sel===WEAK_VALUE?'No weak cards — great job!':'No cards in this deck.';return;}
+  const card=currentDeck[currentCardIndex];
+  document.getElementById('fc-question').textContent=card.q;
+  document.getElementById('fc-answer').textContent=card.a;
+  document.getElementById('fc-progress').textContent=`${currentCardIndex+1} / ${currentDeck.length}`;
+  document.getElementById('fc-bar').style.width=`${((currentCardIndex+1)/currentDeck.length)*100}%`;
+  cardFlipped=false;document.getElementById('flashcard').classList.remove('flipped');
+}
+
+function flipCard(){cardFlipped=!cardFlipped;document.getElementById('flashcard').classList.toggle('flipped',cardFlipped);}
+function nextCard(){
+  if(!currentDeck||!currentDeck.length)return;
+  currentCardIndex=(currentCardIndex+1)%currentDeck.length;updateFlashcard();
+  if(STATE.activeClass){
+    const cls=STATE.classes[STATE.activeClass];
+    ensureClassShape(cls);
+    cls.studied=(cls.studied||0)+1;
+    cls.studyLog.push(Date.now());
+    if(cls.studyLog.length>500)cls.studyLog=cls.studyLog.slice(-500);
+    bumpSessionStudied();
+    save();
+    document.getElementById('stat-studied').textContent=cls.studied;
+    if(document.getElementById('stats').classList.contains('active'))renderStats();
+  }
+}
+function prevCard(){if(!currentDeck||!currentDeck.length)return;currentCardIndex=(currentCardIndex-1+currentDeck.length)%currentDeck.length;updateFlashcard();}
+function shuffleCards(){if(!currentDeck)return;for(let i=currentDeck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[currentDeck[i],currentDeck[j]]=[currentDeck[j],currentDeck[i]];}currentCardIndex=0;updateFlashcard();}
+function markCard(knew){
+  if(!knew&&currentDeck&&currentDeck[currentCardIndex]){
+    const c=currentDeck[currentCardIndex];
+    const dn=c.deck||document.getElementById('deck-select-fc').value;
+    if(dn&&dn!==WEAK_VALUE)addWeakCard(dn,c.q,c.a);
+    currentDeck.push({q:c.q,a:c.a,deck:c.deck});
+  }
+  nextCard();
+}
+
+function removeCurrentFromWeak(){
+  if(!STATE.activeClass)return;
+  const sel=document.getElementById('deck-select-fc').value;
+  if(sel!==WEAK_VALUE||!currentDeck||!currentDeck.length)return;
+  const c=currentDeck[currentCardIndex];
+  const cls=STATE.classes[STATE.activeClass];
+  ensureClassShape(cls);
+  cls.weakCards=cls.weakCards.filter(w=>!(w.deck===c.deck&&w.q===c.q&&w.a===c.a));
+  save();
+  populateSelects();
+  loadFlashcards();
+}
+
+function pad2(n){return String(n).padStart(2,'0');}
+function dateKey(y,mo,d){return `${y}-${pad2(mo)}-${pad2(d)}`;}
+function renderCalendar(){
+  const holder=document.getElementById('calendar-months');
+  if(!holder)return;
+  const today=new Date();
+  const tKey=today.getFullYear()===CALENDAR_YEAR&&CALENDAR_MONTHS.includes(today.getMonth())?dateKey(CALENDAR_YEAR,today.getMonth()+1,today.getDate()):null;
+  holder.innerHTML=CALENDAR_MONTHS.map(monthZero=>{
+    const first=new Date(CALENDAR_YEAR,monthZero,1);
+    const label=first.toLocaleString('en-US',{month:'long',year:'numeric'});
+    const dim=new Date(CALENDAR_YEAR,monthZero+1,0).getDate();
+    const start=first.getDay();
+    let cells='';
+    for(let i=0;i<start;i++)cells+='<div class="cal-cell other"></div>';
+    for(let d=1;d<=dim;d++){
+      const k=dateKey(CALENDAR_YEAR,monthZero+1,d);
+      const list=eventsOnDate(k);
+      const accent=calendarCellDayAccent(list);
+      const sel=k===calendarSelectedDate?' selected':'';
+      const td=k===tKey?' today':'';
+      const hasEx=list.length>0;
+      const hasFinal=list.some(e=>e.examType==='Final');
+      const isToday=tKey===k;
+      const tags=hasEx?examTagsHtmlForCell(list):'';
+      const inner=isToday||hasEx
+        ?`<div class="cal-cell-inner with-tag">${isToday?'<span class="cal-cell-today-lbl">today</span>':''}${hasEx?`<div class="cal-exam-tags">${tags}</div>`:''}<span class="cal-cell-day-num">${d}</span></div>`
+        :`<div class="cal-cell-inner"><span class="cal-cell-day-num">${d}</span></div>`;
+      const styleAttr=accent.cellStyle?` style="${accent.cellStyle}"`:'';
+      const finCls=hasFinal?' cal-has-final':'';
+      cells+=`<div class="cal-cell${accent.classExtra}${finCls}${sel}${td}" data-cal="${k}" onclick="pickCalendarDay('${k}')"${styleAttr}>${inner}</div>`;
+    }
+    const trailing=(start+dim)%7;
+    if(trailing)for(let i=0;i<7-trailing;i++)cells+='<div class="cal-cell other"></div>';
+    return`<div class="cal-month-panel"><div class="cal-month-title">${label}</div><div class="cal-weekdays"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div><div class="cal-grid">${cells}</div></div>`;
+  }).join('');
+  if(calendarSelectedDate)openCalendarEditor(calendarSelectedDate);
+}
+
+function pickCalendarDay(k){
+  calendarSelectedDate=k;
+  document.querySelectorAll('#calendar-months .cal-cell[data-cal]').forEach(el=>{el.classList.toggle('selected',el.getAttribute('data-cal')===k);});
+  openCalendarEditor(k);
+}
+
+function fillCalendarClassSelect(){
+  const sel=document.getElementById('calendar-class-select');
+  const ids=Object.keys(STATE.classes||{});
+  if(!ids.length){sel.innerHTML='<option value="">Add a class in the menu first</option>';return;}
+  sel.innerHTML=ids.map(cid=>{const c=STATE.classes[cid];const lab=c.code?`${escXml(c.code)} — ${escXml(c.name)}`:escXml(c.name);return`<option value="${cid.replace(/"/g,'')}">${lab}</option>`;}).join('');
+}
+
+function openCalendarEditor(k){
+  const ed=document.getElementById('calendar-editor');
+  ed.style.display='block';
+  fillCalendarClassSelect();
+  const [Y,M,D]=k.split('-').map(Number);
+  const dt=new Date(Y,M-1,D);
+  document.getElementById('calendar-editor-label').textContent=dt.toLocaleString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  const list=eventsOnDate(k);
+  const listEl=document.getElementById('calendar-day-events-list');
+  if(!list.length){listEl.innerHTML='<div style="font-size:13px;color:rgba(255,255,255,0.35);">No exams on this day yet.</div>';}
+  else{
+    listEl.innerHTML=list.map((e,i)=>{
+      const st=examTagInlineStyle(e.classId,e.examType);
+      return`<div class="cal-day-event-row"><span class="cal-day-event-meta"><span class="cal-day-type-badge" style="${st}">${escXml(e.examType)}</span> ${escXml(classCalendarLabel(e.classId))}</span><button type="button" class="btn btn-sm btn-danger" onclick="removeCalendarEvent(${i})">Remove</button></div>`;
+    }).join('');
+  }
+}
+
+function addCalendarEvent(){
+  if(!calendarSelectedDate)return;
+  const cid=document.getElementById('calendar-class-select').value;
+  const typ=document.getElementById('calendar-exam-type').value;
+  if(!cid||!STATE.classes[cid])return;
+  if(typ!=='Midterm'&&typ!=='Final')return;
+  const cal=getExamCalendar();
+  if(!cal[calendarSelectedDate])cal[calendarSelectedDate]=[];
+  if(cal[calendarSelectedDate].some(e=>e.classId===cid&&e.examType===typ))return;
+  cal[calendarSelectedDate].push({classId:cid,examType:typ});
+  save();
+  renderCalendar();
+}
+
+function removeCalendarEvent(idx){
+  if(!calendarSelectedDate)return;
+  const cal=getExamCalendar();
+  const arr=cal[calendarSelectedDate];
+  if(!arr||idx<0||idx>=arr.length)return;
+  arr.splice(idx,1);
+  if(!arr.length)delete cal[calendarSelectedDate];
+  save();
+  renderCalendar();
+}
+
+function clearCalendarPick(){
+  if(!calendarSelectedDate)return;
+  const cal=getExamCalendar();
+  delete cal[calendarSelectedDate];
+  save();
+  renderCalendar();
+}
+
+function quizNormalizeAnswer(s){
+  return String(s||'').toLowerCase().replace(/\s+/g,' ').trim();
+}
+function quizAnswersMatch(user,correct){
+  return quizNormalizeAnswer(user)===quizNormalizeAnswer(correct);
+}
+
+function startQuiz(){
+  const n=document.getElementById('deck-select-quiz').value;
+  const deck=(n===MULTI_QUIZ_VALUE)?(MULTI_CACHE.quizCards||[]):getDecks()[n];
+  if(!deck||!deck.length)return;
+  const fmt=(document.getElementById('quiz-format')||{}).value||'mc';
+  const shuffled=[...deck].sort(()=>Math.random()-0.5).slice(0,Math.min(10,deck.length));
+  const canMc=shuffled.length>=2;
+  if(fmt==='mc'&&!canMc){alert('Multiple choice needs at least 2 cards in this deck.');return;}
+  let qTypes;
+  if(fmt==='mc')qTypes=shuffled.map(()=>'mc');
+  else if(fmt==='fr')qTypes=shuffled.map(()=>'fr');
+  else qTypes=shuffled.map(()=>(canMc&&Math.random()<0.5)?'mc':'fr');
+  quizState={cards:shuffled,index:0,score:0,deckName:(n===MULTI_QUIZ_VALUE?(MULTI_CACHE.quizLabel||'Multiple decks'):n),qTypes,format:fmt};
+  renderQuizQuestion();
+}
+
+function renderQuizQuestion(){
+  const area=document.getElementById('quiz-area');
+  if(!quizState){area.innerHTML='<div style="text-align:center;padding:2rem;color:rgba(255,255,255,0.3);font-size:14px;">Select a deck and press "Start quiz"</div>';return;}
+  const{cards,index,qTypes}=quizState;
+  if(index>=cards.length){
+    const pct=Math.round((quizState.score/cards.length)*100);
+    if(STATE.activeClass){
+      const cls=STATE.classes[STATE.activeClass];
+      ensureClassShape(cls);
+      cls.qCorrect=(cls.qCorrect||0)+quizState.score;
+      cls.qTotal=(cls.qTotal||0)+cards.length;
+      const dn=quizState.deckName||'';
+      cls.deckStats[dn]=cls.deckStats[dn]||{c:0,t:0};
+      cls.deckStats[dn].c+=quizState.score;
+      cls.deckStats[dn].t+=cards.length;
+      cls.quizzesTaken=(cls.quizzesTaken||0)+1;
+      save();
+      document.getElementById('stat-accuracy').textContent=Math.round((cls.qCorrect/cls.qTotal)*100)+'%';
+      if(document.getElementById('stats').classList.contains('active'))renderStats();
+    }
+    area.innerHTML=`<div class="score-wrap"><div class="score-num">${pct}%</div><div class="score-lbl">${quizState.score} / ${cards.length} correct</div><button class="btn btn-primary" style="margin-top:1.5rem;" onclick="startQuiz()">Retake quiz</button></div>`;
+    return;
+  }
+  const card=cards[index];
+  const qType=(qTypes&&qTypes[index])||'mc';
+  const qKindHint=quizState.format==='both'?(qType==='fr'?' · Free response':' · Multiple choice'):'';
+  const head=`<div style="font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:8px;">Question ${index+1} of ${cards.length}${qKindHint}</div><div class="pbar-wrap"><div class="pbar" style="width:${(index/cards.length)*100}%"></div></div><div class="quiz-q" style="margin-top:1rem;">${escXml(card.q||'')}</div>`;
+  if(qType==='fr'){
+    area.innerHTML=`${head}<div class="quiz-fr-wrap"><label class="quiz-format-lbl" for="quiz-fr-input" style="margin-top:0;">Your answer</label><textarea class="quiz-fr-input" id="quiz-fr-input" rows="4" placeholder="Type your answer…"></textarea><button type="button" class="btn btn-primary quiz-fr-check" onclick="submitFreeResponse()">Check answer</button></div>`;
+    return;
+  }
+  const wrong=cards.filter((_,i)=>i!==index).sort(()=>Math.random()-0.5).slice(0,3).map(c=>c.a);
+  const opts=[...wrong,card.a].sort(()=>Math.random()-0.5);
+  area.innerHTML=`${head}${opts.map((o,i)=>`<button class="quiz-opt" id="opt-${i}" onclick="selectAnswer(${i},'${o.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}','${String(card.a||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">${escXml(o)}</button>`).join('')}`;
+}
+
+function quizNextLabel(){
+  if(!quizState||!quizState.cards)return'Next question';
+  return quizState.index+1>=quizState.cards.length?'See results':'Next question';
+}
+
+function quizGoNext(){
+  if(!quizState)return;
+  quizState.index++;
+  renderQuizQuestion();
+}
+
+function submitFreeResponse(){
+  if(!quizState)return;
+  const card=quizState.cards[quizState.index];
+  const input=document.getElementById('quiz-fr-input');
+  const btn=document.querySelector('.quiz-fr-check');
+  if(!input||input.disabled)return;
+  const ok=quizAnswersMatch(input.value,card.a);
+  input.disabled=true;
+  if(btn)btn.disabled=true;
+  const wrap=document.querySelector('.quiz-fr-wrap');
+  if(wrap){
+    const wrongBlock=ok?'':`<div class="quiz-fr-ans">Answer: ${escXml(card.a||'')}</div>`;
+    wrap.insertAdjacentHTML('beforeend',`<div class="quiz-fr-result ${ok?'quiz-fr-ok':'quiz-fr-bad'}">${ok?'Correct.':'Incorrect.'}${wrongBlock}</div>`);
+    wrap.insertAdjacentHTML('beforeend',`<div class="quiz-next-wrap"><button type="button" class="btn btn-primary" onclick="quizGoNext()">${quizNextLabel()}</button></div>`);
+  }
+  if(!ok&&card&&card.q)addWeakCard(quizState.deckName,card.q,card.a);
+  if(ok)quizState.score++;
+}
+
+function selectAnswer(idx,selected,correct){
+  document.querySelectorAll('.quiz-opt').forEach(b=>b.disabled=true);
+  const ok=selected===correct;
+  document.getElementById('opt-'+idx).classList.add(ok?'correct':'incorrect');
+  if(!ok)document.querySelectorAll('.quiz-opt').forEach(b=>{if(b.textContent===correct)b.classList.add('correct');});
+  if(!ok&&quizState&&quizState.cards&&quizState.deckName){
+    const card=quizState.cards[quizState.index];
+    if(card&&card.q)addWeakCard(quizState.deckName,card.q,card.a);
+  }
+  if(ok)quizState.score++;
+  const area=document.getElementById('quiz-area');
+  if(area)area.insertAdjacentHTML('beforeend',`<div class="quiz-next-wrap"><button type="button" class="btn btn-primary" onclick="quizGoNext()">${quizNextLabel()}</button></div>`);
+}
+
+async function generateDeck(){
+  if(!STATE.activeClass){alert('Select a class first.');return;}
+  const title=document.getElementById('gen-deck-title').value.trim()||'New deck';
+  const notes=document.getElementById('gen-deck-notes').value.trim();
+  if(!notes){showFeedback('gen-deck-feedback','Please paste some notes first.',false);return;}
+  const loading=document.getElementById('gen-deck-loading');
+  const btn=document.getElementById('btn-gen-deck');
+  loading.classList.add('show');btn.disabled=true;btn.textContent='Generating...';
+  try{
+    const res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'deck',notes})});
+    const data=await res.json();
+    if(!res.ok)throw new Error(data?.error||'Generation failed');
+    const cards=data.cards||[];
+    STATE.classes[STATE.activeClass].decks[title]=cards;
+    save();renderDeckList();populateSelects();syncDeckDetailDrawer();
+    loading.classList.remove('show');btn.disabled=false;btn.textContent='Generate deck';
+    showFeedback('gen-deck-feedback',`Created "${title}" with ${cards.length} cards!`,true);
+    document.getElementById('gen-deck-notes').value='';document.getElementById('gen-deck-title').value='';
+  }catch(e){loading.classList.remove('show');btn.disabled=false;btn.textContent='Generate deck';showFeedback('gen-deck-feedback','Error generating deck. Try again.',false);}
+}
+
+async function generateAddToDeck(){
+  if(!STATE.activeClass){alert('Select a class first.');return;}
+  const sel=document.getElementById('addto-deck-select');
+  const deckName=(sel&&sel.value||'').trim();
+  if(!deckName){showFeedback('addto-deck-feedback','Select a deck first.',false);return;}
+  const notes=document.getElementById('addto-deck-notes').value.trim();
+  if(!notes){showFeedback('addto-deck-feedback','Please paste some additional notes first.',false);return;}
+  const loading=document.getElementById('addto-deck-loading');
+  const btn=document.getElementById('btn-addto-deck');
+  loading.classList.add('show');btn.disabled=true;btn.textContent='Adding...';
+  try{
+    const res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'deck',notes})});
+    const data=await res.json();
+    if(!res.ok)throw new Error(data?.error||'Generation failed');
+    const cards=(data.cards||[]).filter(c=>c&&c.q&&c.a);
+    const cls=STATE.classes[STATE.activeClass];
+    ensureClassShape(cls);
+    cls.decks[deckName]=cls.decks[deckName]||[];
+    const before=cls.decks[deckName].length;
+    cls.decks[deckName].push(...cards);
+    save();
+    renderDeckList();populateSelects();syncDeckDetailDrawer();
+    loading.classList.remove('show');btn.disabled=false;btn.textContent='Add cards to deck';
+    showFeedback('addto-deck-feedback',`Added ${cards.length} card${cards.length!==1?'s':''} to "${deckName}" (${before} → ${cls.decks[deckName].length}).`,true);
+    document.getElementById('addto-deck-notes').value='';
+  }catch(e){
+    loading.classList.remove('show');btn.disabled=false;btn.textContent='Add cards to deck';
+    showFeedback('addto-deck-feedback','Error generating cards. Try again.',false);
+  }
+}
+
+function showFeedback(id,msg,good){
+  const el=document.getElementById(id);
+  el.textContent=msg;el.className='feedback show '+(good?'good':'bad');
+  setTimeout(()=>el.classList.remove('show'),4000);
+}
+
+function init(){
+  load();
+  const ids=Object.keys(STATE.classes);
+  if(!ids.length){
+    const id='class_bio302';
+    STATE.classes[id]={name:'BIO 302 — Genetics',code:'BIO 302',decks:JSON.parse(JSON.stringify(BIO302_DECKS)),studied:0,qCorrect:0,qTotal:0,deckStats:{},quizzesTaken:0,studyLog:[],deckMeta:{},weakCards:[]};
+    save();
+  }
+  renderClassList();
+  // Always start on Home after refresh.
+  showHome();
+}
+
+document.getElementById('new-class-name').addEventListener('keydown',e=>{if(e.key==='Enter')addClass();});
+init();
+</script>
+</body>
+</html>
